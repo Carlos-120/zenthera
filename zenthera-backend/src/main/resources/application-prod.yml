@@ -1,0 +1,14 @@
+spring:
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/zenthera_db
+    username: postgres
+    password: CAMBIAR_EN_PRODUCCION
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+server:
+  port: 8080

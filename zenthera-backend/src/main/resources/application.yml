@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: zenthera-backend
+
+  profiles:
+    active: dev
