@@ -10,5 +10,9 @@ spring:
     hibernate:
       ddl-auto: validate
 
+jwt:
+  secret: "CAMBIAR_A_UN_SECRETO_SEGURON_PRODUCCION"
+  expiration-ms: 86400000
+
 server:
   port: 8080

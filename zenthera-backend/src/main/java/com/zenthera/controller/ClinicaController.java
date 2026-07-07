@@ -1,8 +1,8 @@
 package com.zenthera.controller;
 
+import com.zenthera.dto.clinica.ClinicaRequest;
+import com.zenthera.dto.clinica.ClinicaResponse;
 import com.zenthera.dto.common.ApiResponse;
-import com.zenthera.dto.request.ClinicaRequest;
-import com.zenthera.dto.response.ClinicaResponse;
 import com.zenthera.service.ClinicaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

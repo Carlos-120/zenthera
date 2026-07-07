@@ -1,7 +1,7 @@
 package com.zenthera.service;
 
-import com.zenthera.dto.request.ClinicaRequest;
-import com.zenthera.dto.response.ClinicaResponse;
+import com.zenthera.dto.clinica.ClinicaRequest;
+import com.zenthera.dto.clinica.ClinicaResponse;
 
 import java.util.List;
 

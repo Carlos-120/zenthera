@@ -1,8 +1,7 @@
 package com.zenthera.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.zenthera.enums.RolNombre;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,8 +11,9 @@ import lombok.Setter;
 @Table(name = "roles")
 public class Rol extends BaseEntity {
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true, length = 50)
-    private String nombre;
+    private RolNombre nombre;
 
     @Column(length = 255)
     private String descripcion;

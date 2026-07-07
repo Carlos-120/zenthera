@@ -1,4 +1,4 @@
-package com.zenthera.dto.response;
+package com.zenthera.dto.clinica;
 
 import lombok.Getter;
 import lombok.Setter;

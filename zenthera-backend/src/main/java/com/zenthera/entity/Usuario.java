@@ -45,4 +45,10 @@ public class Usuario extends BaseEntity {
     private Boolean activo = true;
 
     private LocalDateTime ultimoLogin;
+
+    @Column(nullable = false)
+    private Boolean bloqueado = false;
+
+    @Column(nullable = false)
+    private Boolean cambiarPassword = false;    
 }

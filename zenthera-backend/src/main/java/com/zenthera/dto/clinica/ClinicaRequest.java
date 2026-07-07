@@ -1,4 +1,4 @@
-package com.zenthera.dto.request;
+package com.zenthera.dto.clinica;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
