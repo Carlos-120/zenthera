@@ -1,6 +1,7 @@
 package com.zenthera.service.impl;
 
 import com.zenthera.dto.paciente.PacienteResponse;
+import com.zenthera.dto.common.PageResponse;
 import com.zenthera.dto.paciente.PacienteListResponse;
 import com.zenthera.dto.paciente.PacienteRequest;
 import com.zenthera.entity.Clinica;
@@ -10,6 +11,9 @@ import com.zenthera.repository.ClinicaRepository;
 import com.zenthera.repository.PacienteRepository;
 import com.zenthera.service.PacienteService;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import com.zenthera.mapper.common.PageResponseMapper;
 
 import java.util.List;
 
@@ -35,7 +39,12 @@ public class PacienteServiceImpl implements PacienteService {
 
         Clinica clinica = clinicaRepository.findById(request.getClinicaId())
                 .orElseThrow(() -> new IllegalArgumentException("Clínica no encontrada"));
+        if (pacienteRepository.existsByClinicaIdAndCedulaAndActivoTrue(
+                request.getClinicaId(), request.getCedula())) {
 
+            throw new IllegalArgumentException(
+                    "Ya existe un paciente con esa cédula en la clínica.");
+        }
         Paciente paciente = pacienteMapper.toEntity(request);
         paciente.setClinica(clinica);
 
@@ -47,7 +56,17 @@ public class PacienteServiceImpl implements PacienteService {
     @Override
     public List<PacienteListResponse> listar() {
         return pacienteMapper.toListResponse(
-                pacienteRepository.findAll());
+                pacienteRepository.findByActivoTrue());
+    }
+
+    @Override
+    public PageResponse<PacienteListResponse> listar(int page, int size) {
+
+        Page<PacienteListResponse> pacientes = pacienteRepository
+                .findByActivoTrue(PageRequest.of(page, size))
+                .map(pacienteMapper::toListResponse);
+
+        return PageResponseMapper.from(pacientes);
     }
 
     @Override
@@ -95,5 +114,12 @@ public class PacienteServiceImpl implements PacienteService {
         paciente.setActivo(false);
 
         pacienteRepository.save(paciente);
+    }
+
+    @Override
+    public List<PacienteListResponse> buscar(String buscar) {
+
+        return pacienteMapper.toListResponse(
+                pacienteRepository.buscarPacientes(buscar));
     }
 }

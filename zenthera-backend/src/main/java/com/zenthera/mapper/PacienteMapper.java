@@ -22,6 +22,8 @@ public interface PacienteMapper {
     @Mapping(source = "clinica.nombre", target = "nombreClinica")
     PacienteResponse toResponse(Paciente paciente);
 
+    PacienteListResponse toListResponse(Paciente paciente);
+
     List<PacienteListResponse> toListResponse(List<Paciente> pacientes);
 
 }
