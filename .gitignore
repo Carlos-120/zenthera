@@ -1,0 +1,58 @@
+# Maven
+target/
+
+# Environment — secrets (NEVER commit these)
+.env
+.env.local
+.env.*.local
+application-dev-local.yml
+application-prod-local.yml
+
+# VS Code
+.vscode/
+
+# IntelliJ
+.idea/
+
+# Eclipse
+.settings/
+.project
+.classpath
+
+# NetBeans
+nbproject/private/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+# Java
+*.class
+
+# Maven Wrapper logs
+.mvn/wrapper/maven-wrapper.jar
+# Backups and Dumps
+backup_*.sql
+*_backup.sql
+dumps/
+backups/
+backup*
+dump*
+*.bak
+
+# Frontend
+playwright-report/
+test-results/
+.next/
+node_modules/
+
+# Patches and temp
+*.patch
+zenthera-corrupt-index-backup*
+scratch/

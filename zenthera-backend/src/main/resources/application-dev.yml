@@ -1,0 +1,40 @@
+spring:
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/zenthera_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    baseline-on-migrate: true
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+
+jwt:
+  secret: ${JWT_SECRET}
+  # Propiedad actual usada por JwtService (compatibilidad hasta Phase 5)
+  expiration-ms: ${JWT_ACCESS_EXPIRATION:900000}
+  # Propiedades preparadas para Phase 5 (JWT refactor con access + refresh)
+  access-expiration-ms: ${JWT_ACCESS_EXPIRATION:900000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION:604800000}
+  cookie-secure: ${JWT_COOKIE_SECURE:false}
+
+cors:
+  allowed-origins: ${FRONTEND_ALLOWED_ORIGINS:http://localhost:3000}
+
+server:
+  port: ${SERVER_PORT:8080}

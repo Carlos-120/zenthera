@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/zenthera_e2e?currentSchema=e2e_clean_11
+    username: postgres
+    password: ${E2E_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    enabled: true
+    schemas: e2e_clean_11
+    default-schema: e2e_clean_11
+    create-schemas: true
+    out-of-order: true
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        default_schema: e2e_clean_11
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  data:
+    web:
+      pageable:
+        default-page-size: 1000
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration-ms: 900000 # 15 min
+  refresh-expiration-ms: 604800000 # 7 days
+  cookie-secure: false
+
+cors:
+  allowed-origins: http://localhost:3000
+
+server:
+  port: 8080
