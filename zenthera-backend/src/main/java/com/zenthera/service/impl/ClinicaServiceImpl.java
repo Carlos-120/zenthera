@@ -5,12 +5,15 @@ import com.zenthera.dto.clinica.ClinicaEstadoRequest;
 import com.zenthera.dto.clinica.ClinicaResponse;
 import com.zenthera.dto.clinica.ClinicaUpdateRequest;
 import com.zenthera.dto.common.PageResponse;
+import com.zenthera.dto.auth.PublicClinicRegistrationRequest;
+import com.zenthera.dto.auth.PublicClinicRegistrationResponse;
 import com.zenthera.entity.AuditoriaEstadoClinica;
 import com.zenthera.entity.Clinica;
 import com.zenthera.entity.Rol;
 import com.zenthera.entity.Usuario;
 import com.zenthera.enums.RolNombre;
 import com.zenthera.exception.ResourceNotFoundException;
+import com.zenthera.exception.BusinessRuleException;
 import com.zenthera.mapper.ClinicaMapper;
 import com.zenthera.util.HashUtil;
 import com.zenthera.mapper.common.PageResponseMapper;
@@ -21,10 +24,12 @@ import com.zenthera.repository.RolRepository;
 import com.zenthera.repository.UsuarioRepository;
 import com.zenthera.repository.ActivationTokenRepository;
 import com.zenthera.service.ClinicaService;
-import com.zenthera.service.NotificationService;
 import com.zenthera.entity.ActivationToken;
+import com.zenthera.event.ActivationNotificationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +44,7 @@ import java.util.Base64;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class ClinicaServiceImpl implements ClinicaService {
@@ -57,8 +63,8 @@ public class ClinicaServiceImpl implements ClinicaService {
     private final RolRepository rolRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final ActivationTokenRepository activationTokenRepository;
-    private final NotificationService notificationService;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ClinicaServiceImpl(ClinicaRepository clinicaRepository,
                               AuditoriaEstadoClinicaRepository auditoriaRepository,
@@ -66,16 +72,16 @@ public class ClinicaServiceImpl implements ClinicaService {
                               RolRepository rolRepository,
                               RefreshTokenRepository refreshTokenRepository,
                               ActivationTokenRepository activationTokenRepository,
-                              NotificationService notificationService,
-                              PasswordEncoder passwordEncoder) {
+                              PasswordEncoder passwordEncoder,
+                              ApplicationEventPublisher eventPublisher) {
         this.clinicaRepository = clinicaRepository;
         this.auditoriaRepository = auditoriaRepository;
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.activationTokenRepository = activationTokenRepository;
-        this.notificationService = notificationService;
         this.passwordEncoder = passwordEncoder;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -195,12 +201,48 @@ public class ClinicaServiceImpl implements ClinicaService {
         activationToken.setExpiresAt(Instant.now().plus(24, ChronoUnit.HOURS));
         activationTokenRepository.save(activationToken);
 
-        // Enviar notificación
-        notificationService.sendActivationToken(admin.getCorreo(), token);
+        eventPublisher.publishEvent(new ActivationNotificationEvent(admin.getCorreo(), token));
 
         return ClinicaMapper.toResponse(clinica);
     }
 
+
+    @Override
+    @Transactional
+    public PublicClinicRegistrationResponse registerPublicClinic(PublicClinicRegistrationRequest request) {
+        String ruc = request.getRuc().trim();
+        String clinicCorreo = normalizeEmail(request.getCorreo());
+        String adminCorreo = normalizeEmail(request.getAdminCorreo());
+        String adminCedula = request.getAdminCedula().trim();
+        if (clinicaRepository.findByRuc(ruc).isPresent()
+                || clinicaRepository.findByCorreoNormalized(clinicCorreo).isPresent()
+                || usuarioRepository.findByCorreoNormalized(adminCorreo).isPresent()
+                || usuarioRepository.existsByCedula(adminCedula)) {
+            throw new BusinessRuleException("No se puede completar el registro con los datos proporcionados.", HttpStatus.CONFLICT);
+        }
+
+        ClinicaCreateRequest internalRequest = new ClinicaCreateRequest();
+        internalRequest.setRuc(ruc);
+        internalRequest.setRazonSocial(request.getRazonSocial().trim());
+        internalRequest.setNombre(request.getNombre().trim());
+        internalRequest.setCorreo(clinicCorreo);
+        internalRequest.setTelefono(request.getTelefono().trim());
+        internalRequest.setAdminNombres(request.getAdminNombres().trim());
+        internalRequest.setAdminApellidos(request.getAdminApellidos().trim());
+        internalRequest.setAdminCedula(adminCedula);
+        internalRequest.setAdminCorreo(adminCorreo);
+
+        createClinica(internalRequest);
+        Usuario admin = usuarioRepository.findByCorreo(adminCorreo)
+                .orElseThrow(() -> new IllegalStateException("No se pudo completar el registro."));
+        admin.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        return new PublicClinicRegistrationResponse(adminCorreo, "PENDIENTE_ACTIVACION");
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
 
     @Override
     @Transactional

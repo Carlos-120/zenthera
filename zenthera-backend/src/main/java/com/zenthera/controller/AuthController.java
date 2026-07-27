@@ -5,10 +5,13 @@ import com.zenthera.dto.auth.LoginResponse;
 import com.zenthera.dto.auth.MeResponse;
 import com.zenthera.dto.auth.AuthResult;
 import com.zenthera.dto.auth.ActivationRequest;
+import com.zenthera.dto.auth.PublicClinicRegistrationRequest;
+import com.zenthera.dto.auth.PublicClinicRegistrationResponse;
 import com.zenthera.dto.common.ApiResponse;
 import com.zenthera.exception.TokenReutilizadoException;
 import com.zenthera.service.AuthService;
 import com.zenthera.service.ActivationService;
+import com.zenthera.service.ClinicaService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -23,17 +26,32 @@ public class AuthController {
 
     private final AuthService authService;
     private final ActivationService activationService;
+    private final ClinicaService clinicaService;
     private final long refreshExpirationMs;
     private final boolean cookieSecure;
 
     public AuthController(AuthService authService,
                           ActivationService activationService,
+                          ClinicaService clinicaService,
                           @Value("${jwt.refresh-expiration-ms}") long refreshExpirationMs,
                           @Value("${jwt.cookie-secure}") boolean cookieSecure) {
         this.authService = authService;
         this.activationService = activationService;
+        this.clinicaService = clinicaService;
         this.refreshExpirationMs = refreshExpirationMs;
         this.cookieSecure = cookieSecure;
+    }
+
+    @PostMapping("/register-clinic")
+    public ResponseEntity<ApiResponse<PublicClinicRegistrationResponse>> registerClinic(
+            @Valid @RequestBody PublicClinicRegistrationRequest request) {
+        PublicClinicRegistrationResponse response = clinicaService.registerPublicClinic(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.<PublicClinicRegistrationResponse>builder()
+                        .success(true)
+                        .message("Registro recibido. Active la cuenta del administrador para continuar.")
+                        .data(response)
+                        .build());
     }
 
     private ResponseCookie createRefreshTokenCookie(String refreshToken, long maxAge) {

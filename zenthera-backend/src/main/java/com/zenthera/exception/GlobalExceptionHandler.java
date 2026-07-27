@@ -10,6 +10,7 @@ import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.AuthenticationException;
 
 import java.util.List;
 import org.slf4j.Logger;
@@ -116,6 +117,19 @@ public class GlobalExceptionHandler {
 
                 return ResponseEntity.status(ex.getStatus())
                                 .body(response);
+        }
+
+        @ExceptionHandler(AuthenticationException.class)
+        public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(
+                        AuthenticationException ex) {
+
+                ApiResponse<Object> response = ApiResponse.<Object>builder()
+                                .success(false)
+                                .message("Credenciales inválidas")
+                                .errors(List.of())
+                                .build();
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         @ExceptionHandler(Exception.class)

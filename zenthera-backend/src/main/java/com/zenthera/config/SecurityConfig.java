@@ -7,6 +7,7 @@ import com.zenthera.security.filter.JwtAuthenticationFilter;
 import com.zenthera.security.tenant.TenantFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -64,6 +65,7 @@ public class SecurityConfig {
                                     auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll();
                                 }
                                 auth.requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/auth/activate").permitAll()
+                                    .requestMatchers(HttpMethod.POST, "/api/v1/auth/register-clinic").permitAll()
                                     .requestMatchers("/api/v1/auth/me").authenticated()
                                     .requestMatchers("/api/pacientes/**").hasAnyAuthority("ADMIN_CLINICA", "MEDICO", "RECEPCIONISTA")
                                     .requestMatchers("/api/v1/clinica/citas/**").hasAnyAuthority("ADMIN_CLINICA", "MEDICO", "RECEPCIONISTA")

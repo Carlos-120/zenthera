@@ -1,7 +1,7 @@
 # API CONTRACT
 
-Versión: 1.1.0
-Última actualización: 2026-07-12
+Versión: 1.2.0
+Última actualización: 2026-07-26
 Estado Auth Slice: CERRADO Y APROBADO
 
 ---
@@ -38,6 +38,50 @@ Todos los endpoints — incluyendo errores 401, 403, 500 — retornan este forma
 ---
 
 ## Módulo Auth — `/api/v1/auth`
+
+### POST /register-clinic
+**Público.** Registra una clínica y su primer administrador en una única transacción.
+El administrador queda pendiente de activación y no puede iniciar sesión hasta completar el flujo existente de activación.
+Los correos de clínica y administrador se recortan y normalizan a minúsculas antes de persistirse.
+El token se persiste en la transacción y la notificación se envía únicamente tras un commit exitoso. Si el proveedor externo falla después del commit, el registro confirmado conserva su respuesta `201` y sus datos persistidos.
+
+Request:
+```json
+{
+  "ruc": "0999999999001",
+  "razonSocial": "Clínica Ejemplo S.A.",
+  "nombre": "Clínica Ejemplo",
+  "correo": "contacto@ejemplo.com",
+  "telefono": "0999999999",
+  "adminNombres": "Ana",
+  "adminApellidos": "Pérez",
+  "adminCedula": "0100000001",
+  "adminCorreo": "ana@ejemplo.com",
+  "password": "ContraseñaSegura12!"
+}
+```
+
+Response 201:
+```json
+{
+  "success": true,
+  "message": "Registro recibido. Active la cuenta del administrador para continuar.",
+  "data": {
+    "adminCorreo": "ana@ejemplo.com",
+    "estado": "PENDIENTE_ACTIVACION"
+  }
+}
+```
+
+Los campos desconocidos se ignoran según la configuración Jackson actual; nunca se aplican roles, tenantId, clinicaId, estados internos, permisos, planes, módulos ni campos de auditoría. No devuelve secretos, hashes, tokens ni entidades completas.
+
+Errores relevantes:
+
+- `409 Conflict`: RUC, correo de clínica, correo de administrador o cédula ya utilizados. La respuesta usa un mensaje genérico.
+- `400 Bad Request`: datos requeridos o formato de correo inválidos.
+- `401 Unauthorized`: credenciales inválidas, incluido un administrador que aún no ha activado su cuenta; la respuesta no revela la causa.
+
+---
 
 ### POST /login
 **Público.**
@@ -121,6 +165,7 @@ Revoca el refresh token activo y toda su familia. Emite cookie con Max-Age=0.
 | Endpoint | SUPER_ADMIN | ADMIN_CLINICA | MEDICO | RECEPCIONISTA | Anónimo |
 |---|:---:|:---:|:---:|:---:|:---:|
 | POST /login | ✅ | ✅ | ✅ | ✅ | ✅ |
+| POST /register-clinic | ✅ | ✅ | ✅ | ✅ | ✅ |
 | POST /refresh | ✅ | ✅ | ✅ | ✅ | ✅ (cookie) |
 | GET /me | ✅ | ✅ | ✅ | ✅ | ❌ |
 | POST /logout | ✅ | ✅ | ✅ | ✅ | ❌ |
