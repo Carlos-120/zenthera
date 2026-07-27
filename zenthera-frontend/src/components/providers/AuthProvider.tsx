@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import apiClient from '@/lib/axios';
 
-const PUBLIC_ROUTES = ['/login', '/activate'];
+const PUBLIC_ROUTES = ['/login', '/activate', '/registro'];
 const GUEST_ONLY_ROUTES = ['/login'];
 
 let initPromise: Promise<void> | null = null;
