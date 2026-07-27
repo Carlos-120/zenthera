@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import apiClient from '@/lib/axios';
 import { LogIn, AlertCircle } from 'lucide-react';
@@ -11,7 +12,9 @@ export default function LoginPage() {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const registered = searchParams.get('registered') === '1';
 
   const loginMutation = useMutation({
     mutationFn: async () => {
@@ -60,6 +63,12 @@ export default function LoginPage() {
           <div role="alert" className="mb-6 p-4 rounded-lg bg-error/10 border border-error/20 flex items-center text-error text-sm">
             <AlertCircle className="w-5 h-5 mr-3 shrink-0" />
             <p>Credenciales incorrectas o acceso denegado.</p>
+          </div>
+        )}
+
+        {registered && (
+          <div role="status" className="mb-6 rounded-lg border border-success/20 bg-success/10 p-4 text-sm text-success">
+            Clínica registrada correctamente. Revisa tu correo para activar la cuenta del administrador.
           </div>
         )}
 
@@ -112,6 +121,13 @@ export default function LoginPage() {
             )}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-foreground/65">
+          ¿Aún no tienes una clínica?{' '}
+          <Link href="/registro" className="font-medium text-primary hover:text-primary-hover hover:underline">
+            Regístrala aquí
+          </Link>
+        </p>
       </div>
     </div>
   );

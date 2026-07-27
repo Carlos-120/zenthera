@@ -46,8 +46,12 @@ apiClient.interceptors.response.use(
 
     // Si recibimos un 401 y no es ya una petición de reintento
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Evitamos intentar renovar si la falla fue en la ruta de login o en el mismo refresh
-      if (originalRequest.url.includes('/api/v1/auth/login') || originalRequest.url.includes('/api/v1/auth/refresh')) {
+      // Las rutas p\u00fablicas no deben intentar renovar una sesi\u00f3n inexistente.
+      if (
+        originalRequest.url.includes('/api/v1/auth/login') ||
+        originalRequest.url.includes('/api/v1/auth/refresh') ||
+        originalRequest.url.includes('/api/v1/auth/register-clinic')
+      ) {
         return Promise.reject(error);
       }
 
