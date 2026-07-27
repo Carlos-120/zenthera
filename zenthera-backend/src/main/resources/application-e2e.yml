@@ -37,3 +37,9 @@ cors:
 
 server:
   port: 8080
+
+# Exclusivo para E2E: requiere E2E_TOKEN_INBOX_ENABLED=true y E2E_TEST_KEY en el entorno.
+zenthera:
+  e2e:
+    token-inbox:
+      enabled: ${E2E_TOKEN_INBOX_ENABLED:false}

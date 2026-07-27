@@ -6,8 +6,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.context.annotation.Profile;
 
 @Component
+@Profile("!e2e")
 public class ActivationNotificationListener {
 
     private static final Logger log = LoggerFactory.getLogger(ActivationNotificationListener.class);

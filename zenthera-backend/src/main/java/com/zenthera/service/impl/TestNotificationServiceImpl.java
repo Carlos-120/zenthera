@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Profile({"test", "e2e"})
+@Profile("test")
 @Service
 public class TestNotificationServiceImpl implements NotificationService {
 
