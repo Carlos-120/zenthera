@@ -1,8 +1,41 @@
 # CHECKPOINT
 
-FECHA: 2026-07-20
-FASE ACTIVA: Pacientes (Completada, en rediseño estético)
-SUBFASE: Backend y Frontend E2E completados. Rediseño visual en progreso (UI-USUARIOS-001).
+FECHA: 2026-07-28
+FASE ACTIVA: Registro público de clínicas (Completada)
+SUBFASE: E2E validado, sin bloqueos.
+
+## Último hito cerrado: Registro público, activación y acceso inicial de clínicas
+Resultado: COMPLETED / CLOSED / VALIDATED formalmente el 2026-07-28.
+
+## Estado del repositorio
+- Rama: `develop/zenthera-core`
+- HEAD actual: `c1a8ee28e01cc25175289f82ef1557b0ccc2c434`
+- Último commit publicado en `origin/develop/zenthera-core` remoto sincronizado (Push normal, sin force).
+- `main` intacta.
+- Estado Git limpio respecto a archivos tracked, staging vacío antes de la documentación.
+- PostgreSQL no detenido, servicios detenidos (puertos 3000 y 8080 liberados tras validación).
+- Bloqueos del hito: NONE.
+
+## Verificaciones finales del hito (2026-07-28)
+- Vitest: 103 passed (0 failures, 0 skipped).
+- TypeScript: PASS.
+- frontend build: PASS.
+- Playwright individual: 1 passed (duración reportada: 4.6 s).
+- Playwright de estabilidad secuencial: 2 passed.
+  - Comando de estabilidad: `--repeat-each=2 --workers=1`
+  - Playwright failures: 0
+  - Playwright skipped: 0
+  - Retries utilizados: 0
+  - Timeouts modificados: NO
+  - *Aclaración expresa:* La ejecución con `--repeat-each=2 --workers=1` demuestra estabilidad secuencial y no concurrencia simultánea.
+- Limpieza residual E2E:
+  - Administradores residuales: 0
+  - Clínicas residuales: 0
+  - activation_tokens residuales: 0
+  - Roles residuales: 0
+  - Fixture Alpha: intacta
+  - Fixture Beta: intacta
+  - Conteos de fixtures antes y después: sin cambios.
 
 ## Último slice cerrado: Autenticación (Auth)
 Resultado: APROBADO Y CERRADO formalmente el 2026-07-12.
@@ -47,5 +80,5 @@ V5__onboarding_clinicas.sql — Transaccional onboarding, auditoría inmutable d
 ## Último slice cerrado: Pacientes
 Resultado: APROBADO Y CERRADO formalmente el 2026-07-21.
 
-## Próxima acción
-Aura estandarizará visualmente el módulo Usuarios (`UI-USUARIOS-001`).
+## Próximo paso recomendado
+Definir y planificar el siguiente módulo antes de modificar código. Como prioridad de producto, revisar el sistema de diseño y la consistencia visual de Zenthera para establecer componentes reutilizables, estilos, responsive y modo oscuro antes de ampliar múltiples pantallas.

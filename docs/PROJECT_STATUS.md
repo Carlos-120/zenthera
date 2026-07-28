@@ -2,8 +2,8 @@
 
 Fase activa: Clínicas (Completada, esperando aprobación final)
 Porcentaje completado: ~45%
-Fecha: 2026-07-20
-Ultima actualización: 2026-07-20
+Fecha: 2026-07-28
+Ultima actualización: 2026-07-28
 
 ## Resumen ejecutivo
 Zenthera es una plataforma SaaS para gestión administrativa de clínicas privadas.
@@ -103,6 +103,48 @@ Riesgos bloqueantes: ninguno identificado dentro del alcance validado.
 ### Mejoras Futuras Identificadas (No bloqueantes)
 - Evaluar separación del DTO `UsuarioRequest` en `UsuarioCreateRequest` y `UsuarioUpdateRequest`.
 
+## Slice Registro Público de Clínicas — CERRADO Y APROBADO (2026-07-28)
+
+### Alcance Funcional
+- Hito: Registro público, activación y acceso inicial de clínicas (COMPLETED / CLOSED / VALIDATED).
+- Acceso público a `/registro` con formulario de registro de clínica.
+- Creación de la clínica y creación del primer `ADMIN_CLINICA`.
+- Administrador inicialmente inactivo y bloqueo del login antes de activar.
+- Activación mediante token y posterior login correcto (verificación mediante `/api/v1/auth/me`).
+- Rol `ADMIN_CLINICA` confirmado y acceso al dashboard habilitado.
+- Rutas `/dashboard` y `/admin` protegidas; `/login`, `/activate` y `/registro` públicas.
+- Mensaje de registro exitoso y redirección segura a `/login?registered=1`.
+- Ausencia de información personal en la URL de registro.
+
+### Seguridad e Infraestructura E2E
+- Infraestructura E2E exclusiva para pruebas con perfil Spring `e2e`.
+- Activación únicamente con configuración E2E habilitada y clave obtenida de variables de entorno (sin valores secretos predeterminados).
+- Validaciones de endpoint protegido: sin clave (403), clave incorrecta (403), clave válida sin token disponible (404), token de un solo uso (segundo consumo 404).
+- Token no registrado en logs.
+- Infraestructura deshabilitada fuera del entorno E2E.
+
+### Limpieza Segura de Datos (PostgreSQL)
+- Requiere identidad completa de ejecución (correo del administrador, RUC, correo y nombre de clínica) y marcador único.
+- Bloquea usuario y clínica mediante `FOR UPDATE` (transaccional con rollback ante inconsistencias).
+- Valida la existencia de un único usuario perteneciente a la ejecución, rechazando otros administradores o información ajena (pacientes, médicos, citas).
+- Protege explícitamente clínicas fixture (Alpha y Beta) y no puede eliminar clínicas compartidas.
+- Usa SQL parametrizado, sin `LIKE`, sin `TRUNCATE`, sin `DELETE` sin `WHERE` y verifica `rowCount`. Es idempotente y cierra el cliente PostgreSQL siempre.
+
+### Validación y Estado
+- **Commit Final:** `c1a8ee28e01cc25175289f82ef1557b0ccc2c434` (Padre: `196b68f1abe52aa287524f90b17cfd2236cee426`).
+- **Estado Remoto:** Publicado correctamente en `origin/develop/zenthera-core`. Divergencia local/remoto 0 0, Push normal (no force, no rebase, no merge, main intacta).
+- **Pruebas:** Vitest (103 passed, 0 failures, 0 skipped), TypeScript (PASS), Frontend build (PASS), Playwright individual (1 passed), Playwright estabilidad secuencial (2 passed con `--repeat-each=2` y `--workers=1` que demuestra estabilidad secuencial sin concurrencia simultánea, 0 failures, 0 skipped, 0 retries). Timeouts modificados: NO.
+- **Limpieza Post-Pruebas:** 0 administradores residuales, 0 clínicas residuales, 0 activation_tokens residuales, 0 roles residuales. Clínicas Alpha y Beta intactas, conteos de fixtures sin cambios. Puertos 3000 y 8080 liberados. PostgreSQL no fue detenido.
+- **Bloqueos actuales:** NONE. Deuda crítica: NONE. Cambios tracked pendientes después del push: 0. Archivos históricos untracked permanecen fuera del alcance.
+
+### Archivos incluidos
+- `zenthera-frontend/e2e/registro.spec.ts`
+- `zenthera-frontend/e2e/helpers/activationToken.ts`
+- `zenthera-frontend/e2e/helpers/database.ts`
+- `zenthera-frontend/src/__tests__/databaseCleanup.test.ts`
+- `zenthera-frontend/src/components/providers/AuthProvider.tsx`
+- `zenthera-frontend/src/__tests__/AuthProvider.test.tsx`
+
 ## Auditoría y Reglas del Sistema
 
 - **2026-07-20**: Se registró un incidente donde el agente Inspector modificó directamente `docs/API_CONTRACT.md` para agregar el endpoint `/api/v1/clinica/roles` (fuera de su responsabilidad). El cambio se mantuvo por ser técnicamente correcto, pero se actualizaron las reglas del Inspector (`02-inspector.md`) para prohibir terminantemente la edición directa de archivos de código o documentación en futuras revisiones.
@@ -115,6 +157,7 @@ Riesgos bloqueantes: ninguno identificado dentro del alcance validado.
 |---|---|---|
 | Auth (Backend + Frontend + E2E) | CERRADO | 2026-07-12 |
 | Clínicas | CERRADO | 2026-07-20 |
+| Registro de Clínicas | CERRADO | 2026-07-28 |
 | Usuarios | CERRADO | 2026-07-20 |
 | Pacientes (Backend) | CERRADO | 2026-07-20 |
 | Pacientes (Frontend + E2E) | CERRADO | 2026-07-21 |
