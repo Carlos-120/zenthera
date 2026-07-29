@@ -1,20 +1,44 @@
 # CHECKPOINT
 
-FECHA: 2026-07-28
-FASE ACTIVA: Registro público de clínicas (Completada)
-SUBFASE: E2E validado, sin bloqueos.
+FECHA: 2026-07-29
+FASE ACTIVA: PUBLIC-UI
+SUBFASE: Foundation pública completada.
 
-## Último hito cerrado: Registro público, activación y acceso inicial de clínicas
-Resultado: COMPLETED / CLOSED / VALIDATED formalmente el 2026-07-28.
+## Último hito cerrado: PUBLIC-UI
+Resultado: IMPLEMENTED: YES, TESTED: YES, INSPECTOR_APPROVED: YES, ATLAS_CLOSED: YES, COMMITTED: YES, PUSHED: NO
 
-## Estado del repositorio
-- Rama: `develop/zenthera-core`
-- HEAD actual: `c1a8ee28e01cc25175289f82ef1557b0ccc2c434`
-- Último commit publicado en `origin/develop/zenthera-core` remoto sincronizado (Push normal, sin force).
-- `main` intacta.
-- Estado Git limpio respecto a archivos tracked, staging vacío antes de la documentación.
-- PostgreSQL no detenido, servicios detenidos (puertos 3000 y 8080 liberados tras validación).
-- Bloqueos del hito: NONE.
+FUNCTIONAL_COMMIT:
+e24e146d0b4315b1cfed5025348a2f132ab95a8a
+
+FUNCTIONAL_COMMIT_MESSAGE:
+feat(public-ui): add public authentication flows
+
+### Validaciones reales
+- Vitest: 112/112 PASS
+- Build frontend: PASS
+- Playwright dirigido: 2/2 PASS
+- Playwright secuencial: 4/4 PASS
+- Login aislado: PASS
+- Retries: 0
+- Workers: 1
+- Token retirado de URL: VERIFIED
+- ADMIN_CLINICA: VERIFIED
+- Dashboard: VERIFIED
+- Datos residuales: 0
+- Fixtures Alpha y Beta: intactos
+- PUBLIC_UI_REGRESSIONS: NO
+
+La suite E2E completa no pasó y no fue utilizada como gate final.
+Los fallos privados detectados son preexistentes y corresponden a deuda backend fuera del alcance de PUBLIC-UI.
+
+## Estado base histórico
+BASE_BRANCH: develop/zenthera-core
+BASE_HEAD: c5649050c3f51255e419ccd3228eff10b93da617
+
+## Estado actual del trabajo PUBLIC-UI
+CURRENT_WORKTREE: C:\Users\usuario1\Desktop\ZENTHERA-public-ui
+CURRENT_BRANCH: feat/public-ui-foundation
+CURRENT_HEAD: e24e146d0b4315b1cfed5025348a2f132ab95a8a
 
 ## Verificaciones finales del hito (2026-07-28)
 - Vitest: 103 passed (0 failures, 0 skipped).
@@ -81,4 +105,4 @@ V5__onboarding_clinicas.sql — Transaccional onboarding, auditoría inmutable d
 Resultado: APROBADO Y CERRADO formalmente el 2026-07-21.
 
 ## Próximo paso recomendado
-Definir y planificar el siguiente módulo antes de modificar código. Como prioridad de producto, revisar el sistema de diseño y la consistencia visual de Zenthera para establecer componentes reutilizables, estilos, responsive y modo oscuro antes de ampliar múltiples pantallas.
+Preparar revisión del diff y commit funcional de PUBLIC-UI. Después, reabrir y priorizar las tareas backend en trabajo separado.
