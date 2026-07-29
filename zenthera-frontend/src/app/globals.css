@@ -3,38 +3,64 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
   --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --color-surface-hover: var(--surface-hover);
   --color-border: var(--border);
-  --color-error: var(--error);
+  --color-danger: var(--danger);
+  --color-error: var(--danger);
   --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-focus-ring: var(--focus-ring);
 }
 
 @layer base {
   :root {
-    --background: #f8fafc;
-    --foreground: #0f172a;
-    --primary: #4f46e5;
-    --primary-hover: #4338ca;
+    --background: #f7f9fc;
+    --foreground: #102a43;
+    --foreground-muted: #526b84;
+    --primary: #155eef;
+    --primary-hover: #004eeb;
+    --primary-foreground: #ffffff;
+    --accent: #0f9d94;
     --surface: #ffffff;
-    --surface-hover: #f1f5f9;
-    --border: #e2e8f0;
-    --error: #ef4444;
-    --success: #10b981;
+    --surface-muted: #eef4fa;
+    --surface-hover: #e8f0f8;
+    --border: #d7e2ee;
+    --success: #087f5b;
+    --warning: #b54708;
+    --danger: #d92d20;
+    --error: var(--danger);
+    --focus-ring: #84adff;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --shadow-sm: 0 1px 2px rgb(16 42 67 / 0.08);
+    --shadow-md: 0 12px 32px rgb(16 42 67 / 0.12);
   }
 
   .dark {
-    --background: #0b0f19;
-    --foreground: #f8fafc;
-    --primary: #6366f1;
-    --primary-hover: #818cf8;
-    --surface: #131b2c;
-    --surface-hover: #1e293b;
-    --border: #1e293b;
-    --error: #f87171;
-    --success: #34d399;
+    --background: #081525;
+    --foreground: #eff6ff;
+    --foreground-muted: #b3c5d8;
+    --primary: #78a9ff;
+    --primary-hover: #a6c8ff;
+    --primary-foreground: #08245c;
+    --accent: #4fd1c5;
+    --surface: #102a43;
+    --surface-muted: #163b5c;
+    --surface-hover: #1b476d;
+    --border: #285577;
+    --success: #66d9a8;
+    --warning: #fdbb74;
+    --danger: #ff9b92;
+    --error: var(--danger);
+    --focus-ring: #9cc4ff;
   }
 }
 
@@ -53,6 +79,11 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
 }
 
 /* Animations */

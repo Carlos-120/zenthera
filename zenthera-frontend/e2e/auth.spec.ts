@@ -9,7 +9,7 @@ const PASSWORD    = process.env.E2E_PASSWORD ?? '';
 async function login(page: Page, email: string, pwd: string) {
   await page.goto('/login');
   await page.getByLabel('Correo Electrónico').fill(email);
-  await page.getByLabel('Contraseña').fill(pwd);
+  await page.getByLabel('Contraseña', { exact: true }).fill(pwd);
   await page.getByRole('button', { name: /Iniciar Sesión/i }).click();
 }
 

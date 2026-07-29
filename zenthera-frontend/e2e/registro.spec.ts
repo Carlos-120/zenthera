@@ -64,13 +64,25 @@ function createRegistrationIdentity(): RegistrationIdentity {
 
 async function submitLogin(page: Page, correo: string, password: string) {
   await page.getByLabel('Correo Electr\u00f3nico').fill(correo);
-  await page.getByLabel('Contrase\u00f1a').fill(password);
+  await page.getByLabel('Contrase\u00f1a', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Iniciar Sesi\u00f3n' }).click();
 }
 
 test.describe('Registro p\u00fablico de cl\u00ednica E2E', () => {
   test.beforeAll(() => {
     requiredEnvironment();
+  });
+
+  test('sin token muestra un estado seguro y mantiene el acceso al inicio de sesión', async ({ page }) => {
+    await page.goto('/activate');
+    const activationContent = page.getByRole('main');
+
+    await expect(activationContent.getByRole('heading', { name: 'No pudimos validar el enlace', exact: true })).toBeVisible();
+    await expect(activationContent.getByRole('alert')).toHaveText('El enlace de activación es inválido, ha expirado o ya fue utilizado.');
+    await expect(activationContent.getByLabel('Nueva Contraseña', { exact: true })).toHaveCount(0);
+    await expect(activationContent.getByLabel('Confirmar Contraseña', { exact: true })).toHaveCount(0);
+    await expect(activationContent.getByRole('button', { name: 'Activar Cuenta', exact: true })).toHaveCount(0);
+    await expect(activationContent.getByRole('link', { name: 'Volver al inicio de sesión', exact: true })).toHaveAttribute('href', '/login');
   });
 
   test('registra, activa y autentica un ADMIN_CLINICA sin dejar datos residuales', async ({ page, request }) => {
@@ -99,7 +111,7 @@ test.describe('Registro p\u00fablico de cl\u00ednica E2E', () => {
         page.waitForURL('/login?registered=1'),
         page.getByRole('button', { name: 'Registrar cl\u00ednica' }).click(),
       ]);
-      await expect(page.getByRole('status')).toContainText('Cl\u00ednica registrada correctamente');
+      await expect(page.getByRole('main').getByRole('status')).toContainText('Cl\u00ednica registrada correctamente');
 
       let preActivationMeCalled = false;
       const capturePreActivationMe = (request: { url(): string }) => {
@@ -111,7 +123,7 @@ test.describe('Registro p\u00fablico de cl\u00ednica E2E', () => {
       try {
         await submitLogin(page, identity.adminCorreo, password);
         await expect(
-          page.getByRole('alert').filter({ hasText: 'Credenciales incorrectas o acceso denegado.' }),
+          page.getByRole('main').getByRole('alert').filter({ hasText: 'Credenciales incorrectas o acceso denegado.' }),
         ).toContainText('Credenciales incorrectas o acceso denegado.');
         await expect(page).toHaveURL('/login?registered=1');
         await expect(page).not.toHaveURL(/\/dashboard(?:\/|$)/);
@@ -128,11 +140,18 @@ test.describe('Registro p\u00fablico de cl\u00ednica E2E', () => {
 
       token = await consumeActivationToken(request, identity.adminCorreo);
       await page.goto(`/activate?token=${encodeURIComponent(token)}`);
-      await expect(page.getByRole('heading', { name: 'Activar Cuenta' })).toBeVisible();
-      await page.getByLabel('Nueva Contrase\u00f1a').fill(password);
-      await page.getByRole('textbox', { name: 'Confirmar Contrase\u00f1a' }).fill(password);
-      await page.getByRole('button', { name: 'Activar Cuenta' }).click();
-      await expect(page.getByRole('heading', { name: '\u00a1Cuenta Activada!' })).toBeVisible();
+      const activationContent = page.getByRole('main');
+      await expect(activationContent.getByRole('heading', { name: 'Activa tu cuenta', exact: true })).toBeVisible();
+      await expect(activationContent.getByLabel('Nueva Contraseña', { exact: true })).toBeVisible();
+      await expect(activationContent.getByLabel('Confirmar Contraseña', { exact: true })).toBeVisible();
+      await expect(activationContent.getByRole('button', { name: 'Mostrar nueva contraseña', exact: true })).toBeVisible();
+      await expect(activationContent.getByRole('button', { name: 'Mostrar confirmación de contraseña', exact: true })).toBeVisible();
+      await expect(activationContent.getByRole('button', { name: 'Activar Cuenta', exact: true })).toBeVisible();
+      await activationContent.getByLabel('Nueva Contraseña', { exact: true }).fill(password);
+      await activationContent.getByLabel('Confirmar Contraseña', { exact: true }).fill(password);
+      await activationContent.getByRole('button', { name: 'Activar Cuenta', exact: true }).click();
+      await expect(activationContent.getByRole('heading', { name: 'Cuenta activada correctamente', exact: true })).toBeVisible();
+      await expect(activationContent.getByRole('link', { name: 'Ir al inicio de sesión', exact: true })).toHaveAttribute('href', '/login');
 
       await expectActivationTokenAlreadyConsumed(request, identity.adminCorreo);
       token = undefined;

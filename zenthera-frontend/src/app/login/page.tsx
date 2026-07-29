@@ -6,11 +6,15 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import apiClient from '@/lib/axios';
-import { LogIn, AlertCircle } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { PublicFormCard } from '@/components/public/PublicFormCard';
+import { PublicLayout } from '@/components/public/PublicLayout';
+import { PublicSecurityNotice } from '@/components/public/PublicSecurityNotice';
 
 export default function LoginPage() {
   const [correo, setCorreo] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -45,18 +49,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center relative overflow-hidden bg-background">
-      {/* Elementos decorativos (Glassmorphism blobs) */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/20 rounded-full blur-3xl mix-blend-multiply opacity-70 animate-pulse"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[30rem] h-[30rem] bg-indigo-500/20 rounded-full blur-3xl mix-blend-multiply opacity-70 animate-pulse" style={{ animationDelay: '2s' }}></div>
-
-      <div className="z-10 w-full max-w-md p-8 animate-fade-in glass rounded-2xl mx-4">
-        <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 border border-primary/20">
-            <LogIn className="w-8 h-8 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">ZENTHERA</h1>
-          <p className="text-sm text-foreground/60 mt-2">Plataforma de Gestión Médica</p>
+    <PublicLayout>
+      <div className="py-2 sm:py-4">
+      <PublicFormCard className="animate-fade-in">
+        <div className="mb-9 text-left">
+          <p className="text-sm font-semibold text-accent">Acceso seguro</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">Bienvenido de nuevo</h1>
+          <p className="mt-3 text-sm leading-6 text-foreground-muted">Inicia sesión para acceder al panel de tu clínica.</p>
         </div>
 
         {loginMutation.isError && (
@@ -95,18 +94,29 @@ export default function LoginPage() {
             <label htmlFor="password" className="block text-sm font-medium text-foreground/80 mb-1">
               Contraseña
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loginMutation.isPending}
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-surface/50 focus:bg-surface focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all duration-200 text-foreground"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loginMutation.isPending}
+                className="w-full px-4 py-2.5 pr-12 rounded-xl border border-border bg-surface/50 focus:bg-surface focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all duration-200 text-foreground"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                disabled={loginMutation.isPending}
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/55 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" aria-hidden="true" /> : <Eye className="h-5 w-5" aria-hidden="true" />}
+              </button>
+            </div>
           </div>
 
           <button
@@ -128,7 +138,9 @@ export default function LoginPage() {
             Regístrala aquí
           </Link>
         </p>
+      </PublicFormCard>
+      <PublicSecurityNotice />
       </div>
-    </div>
+    </PublicLayout>
   );
 }

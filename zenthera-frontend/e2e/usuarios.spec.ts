@@ -8,7 +8,7 @@ const PASSWORD = process.env.E2E_PASSWORD ?? '';
 async function login(page: Page, email: string) {
   await page.goto('/login');
   await page.getByLabel('Correo Electrónico').fill(email);
-  await page.getByLabel('Contraseña').fill(PASSWORD);
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD);
   await page.getByRole('button', { name: /Iniciar Sesión/i }).click();
 
   await page.waitForURL(/\/dashboard/, { timeout: 15000 });
@@ -70,7 +70,7 @@ test.describe('Usuarios E2E — ZENTHERA', () => {
       await page.getByLabel(/Apellidos \*/i).fill(`E2E ${randomId}`);
       await page.getByLabel(/Cédula \*/i).fill(randomCedula1);
       await page.getByLabel(/Correo Electrónico \*/i).fill(`recepcion_${randomId}@alpha.com`);
-      await page.getByLabel(/Contraseña/i).fill('TempPassword123!');
+      await page.getByLabel('Contraseña', { exact: true }).fill('TempPassword123!');
 
       await page.getByRole('button', { name: /Guardar Usuario/i }).click();
 
@@ -86,7 +86,7 @@ test.describe('Usuarios E2E — ZENTHERA', () => {
       await page.getByLabel(/Apellidos \*/i).fill(`E2E ${randomId}`);
       await page.getByLabel(/Cédula \*/i).fill(randomCedula2);
       await page.getByLabel(/Correo Electrónico \*/i).fill(`medico_${randomId}@alpha.com`);
-      await page.getByLabel(/Contraseña/i).fill('TempPassword123!');
+      await page.getByLabel('Contraseña', { exact: true }).fill('TempPassword123!');
 
       await page.getByRole('button', { name: /Guardar Usuario/i }).click();
       await page.waitForURL(/\/dashboard\/usuarios$/, { timeout: 10000 });

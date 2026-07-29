@@ -340,6 +340,9 @@ describe('LoginPage registration confirmation', () => {
     renderWithQuery(<LoginPage />);
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Bienvenido de nuevo' })).toBeInTheDocument();
+    expect(screen.getByText('Inicia sesi\u00f3n para acceder al panel de tu cl\u00ednica.')).toBeInTheDocument();
+    expect(screen.getAllByText('ZENTHERA')).toHaveLength(1);
     expect(screen.getByRole('button', { name: 'Iniciar Sesi\u00f3n' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Reg\u00edstrala aqu\u00ed' })).toHaveAttribute('href', '/registro');
   });
@@ -352,5 +355,19 @@ describe('LoginPage registration confirmation', () => {
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Iniciar Sesi\u00f3n' })).toBeInTheDocument();
+  });
+
+  it('permite mostrar y ocultar la contraseña de login con un nombre accesible único', () => {
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams() as ReturnType<typeof useSearchParams>
+    );
+    renderWithQuery(<LoginPage />);
+
+    const password = screen.getByLabelText('Contraseña', { exact: true });
+    expect(password).toHaveAttribute('type', 'password');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+    expect(password).toHaveAttribute('type', 'text');
+    expect(screen.getByRole('button', { name: 'Ocultar contraseña' })).toBeInTheDocument();
   });
 });
