@@ -2,8 +2,8 @@
 
 Fase activa: Clínicas (Completada, esperando aprobación final)
 Porcentaje completado: ~45%
-Fecha: 2026-07-28
-Ultima actualización: 2026-07-28
+Fecha: 2026-07-29
+Ultima actualización: 2026-07-29
 
 ## Resumen ejecutivo
 Zenthera es una plataforma SaaS para gestión administrativa de clínicas privadas.
@@ -149,17 +149,47 @@ Riesgos bloqueantes: ninguno identificado dentro del alcance validado.
 
 - **2026-07-20**: Se registró un incidente donde el agente Inspector modificó directamente `docs/API_CONTRACT.md` para agregar el endpoint `/api/v1/clinica/roles` (fuera de su responsabilidad). El cambio se mantuvo por ser técnicamente correcto, pero se actualizaron las reglas del Inspector (`02-inspector.md`) para prohibir terminantemente la edición directa de archivos de código o documentación en futuras revisiones.
 
+## Deuda Backend Preexistente (Reapertura Requerida)
+
+### BACK-CLINICAS-DETAIL-001 (GET /api/v1/admin/clinicas/{id})
+PREVIOUS_DOCUMENTED_STATUS: COMPLETED
+CURRENT_VERIFIED_STATUS: REOPEN_REQUIRED
+REASON: implementación ausente en la rama base
+
+### BACK-PACIENTES-001 (Listado tenant de pacientes con soporte para search)
+PREVIOUS_DOCUMENTED_STATUS: IN_PROGRESS
+CURRENT_VERIFIED_STATUS: REOPEN_REQUIRED
+REASON: El alcance de búsqueda tenant mediante search sigue sin estar implementado en la rama base.
+
+### BACK-USUARIOS-001 (GET /api/v1/clinica/usuarios)
+PREVIOUS_DOCUMENTED_STATUS: COMPLETED
+CURRENT_VERIFIED_STATUS: REOPEN_REQUIRED
+REASON: implementación ausente en la rama base
+
+### BACK-USUARIOS-ROLES-001 (GET /api/v1/clinica/roles)
+PREVIOUS_DOCUMENTED_STATUS: COMPLETED
+CURRENT_VERIFIED_STATUS: REOPEN_REQUIRED
+REASON: implementación ausente en la rama base
+
 ---
+
+## Slice PUBLIC-UI
+PUBLIC_UI_STATUS: CLOSED
+FUNCTIONAL_COMMIT_CREATED: YES
+FUNCTIONAL_COMMIT_HASH: e24e146d0b4315b1cfed5025348a2f132ab95a8a
+DOCUMENTATION_COMMIT_CREATED: NO
+PUSH_PERFORMED: NO
 
 ## Historial de slices
 
 | Slice | Estado | Fecha cierre |
 |---|---|---|
 | Auth (Backend + Frontend + E2E) | CERRADO | 2026-07-12 |
-| Clínicas | CERRADO | 2026-07-20 |
+| Clínicas | REOPEN_REQUIRED | 2026-07-20 |
 | Registro de Clínicas | CERRADO | 2026-07-28 |
-| Usuarios | CERRADO | 2026-07-20 |
-| Pacientes (Backend) | CERRADO | 2026-07-20 |
+| Usuarios | REOPEN_REQUIRED | 2026-07-20 |
+| Pacientes (Backend) | REOPEN_REQUIRED | 2026-07-20 |
+| PUBLIC-UI | CERRADO (Committed) | 2026-07-29 |
 | Pacientes (Frontend + E2E) | CERRADO | 2026-07-21 |
 | Médicos (backend parcial) | Pendiente frontend | — |
 | Citas / Agenda | Pendiente | — |

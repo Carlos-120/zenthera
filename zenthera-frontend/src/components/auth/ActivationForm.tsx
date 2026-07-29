@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { activateAccount } from '@/lib/api/auth';
 import { Eye, EyeOff, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
@@ -80,10 +81,22 @@ export default function ActivationForm() {
 
   if (success) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 space-y-4 animate-fade-in text-center">
+      <div className="flex flex-col items-center justify-center space-y-5 p-8 text-center animate-fade-in">
         <CheckCircle className="w-16 h-16 text-[var(--success)]" />
-        <h2 className="text-2xl font-bold text-[var(--foreground)]">¡Cuenta Activada!</h2>
-        <p className="text-gray-500">Su cuenta ha sido activada exitosamente. Redirigiendo al inicio de sesión...</p>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Cuenta activada correctamente</h1>
+        <p className="max-w-sm text-foreground-muted">Ya puedes iniciar sesión y comenzar a configurar tu clínica.</p>
+        <Link href="/login" className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-md)] bg-primary px-4 py-2.5 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover">Ir al inicio de sesión</Link>
+      </div>
+    );
+  }
+
+  if (!initialToken) {
+    return (
+      <div className="flex flex-col items-center p-8 text-center animate-fade-in">
+        <AlertCircle className="h-14 w-14 text-[var(--danger)]" aria-hidden="true" />
+        <h1 className="mt-5 text-2xl font-bold text-[var(--foreground)]">No pudimos validar el enlace</h1>
+        <p role="alert" className="mt-3 max-w-sm text-sm leading-6 text-foreground-muted">El enlace de activación es inválido, ha expirado o ya fue utilizado.</p>
+        <Link href="/login" className="mt-7 inline-flex min-h-11 items-center justify-center rounded-[var(--radius-md)] bg-primary px-4 py-2.5 font-semibold text-primary-foreground transition-colors hover:bg-primary-hover">Volver al inicio de sesión</Link>
       </div>
     );
   }
@@ -91,12 +104,12 @@ export default function ActivationForm() {
   return (
     <div className="p-8 animate-fade-in">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">Activar Cuenta</h1>
-        <p className="text-gray-500">Configure su contraseña para comenzar a usar Zenthera</p>
+        <h1 className="mb-2 text-3xl font-bold text-[var(--foreground)]">Activa tu cuenta</h1>
+        <p className="text-foreground-muted">Crea una contraseña segura para comenzar a utilizar Zenthera.</p>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-lg bg-[var(--error)]/10 border border-[var(--error)]/20 flex items-start gap-3">
+        <div role="alert" className="mb-6 flex items-start gap-3 rounded-lg border border-[var(--error)]/20 bg-[var(--error)]/10 p-4">
           <AlertCircle className="w-5 h-5 text-[var(--error)] shrink-0 mt-0.5" />
           <p className="text-sm text-[var(--error)]">{error}</p>
         </div>
@@ -123,12 +136,13 @@ export default function ActivationForm() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              aria-label={showPassword ? "Ocultar nueva contraseña" : "Mostrar nueva contraseña"}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
+          <p className="mt-1.5 text-sm text-foreground-muted">Utiliza entre 12 y 72 caracteres.</p>
         </div>
 
         <div>
@@ -151,7 +165,7 @@ export default function ActivationForm() {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              aria-label={showConfirmPassword ? "Ocultar confirmar contraseña" : "Mostrar confirmar contraseña"}
+              aria-label={showConfirmPassword ? "Ocultar confirmación de contraseña" : "Mostrar confirmación de contraseña"}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
             >
               {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}

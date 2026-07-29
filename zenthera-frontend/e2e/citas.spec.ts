@@ -99,7 +99,7 @@ async function uiLogin(page: Page, correo: string) {
   await page.context().clearCookies();
   await page.goto('/login');
   await page.getByLabel('Correo Electrónico').fill(correo);
-  await page.getByLabel('Contraseña').fill(PASSWORD!);
+  await page.getByLabel('Contraseña', { exact: true }).fill(PASSWORD!);
   await page.getByRole('button', { name: /Iniciar Sesión/i }).click();
   await page.waitForURL(/\/(dashboard|admin)/, { timeout: 15_000 });
 }
