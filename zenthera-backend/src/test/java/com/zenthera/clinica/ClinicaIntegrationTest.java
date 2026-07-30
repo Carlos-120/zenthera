@@ -312,4 +312,35 @@ public class ClinicaIntegrationTest {
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("El correo electrónico proporcionado ya se encuentra registrado por otra cuenta."));
     }
+
+    @Test
+    void givenSuperAdmin_whenGetDetalle_thenOk() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/clinicas/" + clinicaB.getId())
+                .header("Authorization", "Bearer " + validJwtSuperAdmin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.nombre").value(clinicaB.getNombre()))
+                .andExpect(jsonPath("$.data.ruc").value(clinicaB.getRuc()));
+    }
+
+    @Test
+    void givenSuperAdmin_whenGetDetalleInexistente_thenNotFound() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/clinicas/999999")
+                .header("Authorization", "Bearer " + validJwtSuperAdmin))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void givenAdminClinica_whenGetDetalle_thenForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/clinicas/" + clinicaB.getId())
+                .header("Authorization", "Bearer " + validJwtAdminClinica))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void givenAnonymous_whenGetDetalle_thenUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/clinicas/" + clinicaB.getId()))
+                .andExpect(status().isUnauthorized());
+    }
 }

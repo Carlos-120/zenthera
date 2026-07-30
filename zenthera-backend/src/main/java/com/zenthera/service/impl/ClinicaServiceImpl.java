@@ -111,6 +111,14 @@ public class ClinicaServiceImpl implements ClinicaService {
 
     @Override
     @Transactional(readOnly = true)
+    public ClinicaResponse obtenerDetalle(Long id) {
+        Clinica clinica = clinicaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Clínica no encontrada"));
+        return ClinicaMapper.toResponse(clinica);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ClinicaResponse getMiClinica(Long clinicaId) {
         Clinica clinica = clinicaRepository.findById(clinicaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Clínica no encontrada"));
