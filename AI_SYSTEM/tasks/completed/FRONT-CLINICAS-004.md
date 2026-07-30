@@ -14,6 +14,8 @@ Crear la Pantalla de Detalle y Suspensión de clínica en `/admin/clinicas/[id]`
 - Mostrar toda la información detallada de la clínica.
 - Botones y modal interactivo para "Suspender" y "Reactivar" requiriendo un `motivo`.
 - **BLOQUEO:** Requiere obligatoriamente que la tarea `BACK-CLINICAS-DETAIL-001` sea finalizada y probada, ya que depende del endpoint `GET /api/v1/admin/clinicas/{id}` que actualmente no existe en el backend.
+  BACKEND_BLOCKER: RESOLVED
+  READY_TO_CONTINUE: YES
 
 ## Acceptance Criteria
 

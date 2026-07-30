@@ -152,9 +152,18 @@ Riesgos bloqueantes: ninguno identificado dentro del alcance validado.
 ## Deuda Backend Preexistente (Reapertura Requerida)
 
 ### BACK-CLINICAS-DETAIL-001 (GET /api/v1/admin/clinicas/{id})
-PREVIOUS_DOCUMENTED_STATUS: COMPLETED
-CURRENT_VERIFIED_STATUS: REOPEN_REQUIRED
-REASON: implementación ausente en la rama base
+STATUS: COMPLETED
+VERIFICATION: VERIFIED
+ENDPOINT: GET /api/v1/admin/clinicas/{id}
+RESPONSE: ApiResponse<ClinicaResponse>
+SECURITY: SUPER_ADMIN
+NOT_FOUND: HTTP 404 mediante ResourceNotFoundException
+TARGETED_TESTS: 12/12 PASS
+BACKEND_TESTS: 111/111 PASS
+BUILD: BUILD SUCCESS
+FEATURE_COMMIT: ace179621fca5bbc7d6c351f04cbc1b14f087d35
+MERGE_COMMIT: 2507b041f2c5460c0e1756987b6d98551030a6be
+PR: #3 MERGED
 
 ### BACK-PACIENTES-001 (Listado tenant de pacientes con soporte para search)
 PREVIOUS_DOCUMENTED_STATUS: IN_PROGRESS

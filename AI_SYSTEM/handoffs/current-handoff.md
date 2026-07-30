@@ -45,7 +45,7 @@ La suite E2E completa no pasó y no fue utilizada como gate final.
 Los fallos privados detectados son preexistentes y corresponden a deuda backend fuera del alcance de PUBLIC-UI.
 
 ## Deuda Backend Preexistente
-BACK-CLINICAS-DETAIL-001: REOPEN_REQUIRED
+BACK-CLINICAS-DETAIL-001: COMPLETED
 BACK-PACIENTES-001: REOPEN_REQUIRED
 BACK-USUARIOS-001: REOPEN_REQUIRED
 BACK-USUARIOS-ROLES-001: REOPEN_REQUIRED
