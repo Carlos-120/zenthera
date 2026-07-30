@@ -18,6 +18,14 @@ vi.mock('@/lib/api/auth', () => ({
 
 const mockPush = vi.fn();
 const registerClinicMock = vi.mocked(registerClinic);
+const mockRouter = {
+  back: vi.fn(),
+  forward: vi.fn(),
+  refresh: vi.fn(),
+  push: mockPush,
+  replace: vi.fn(),
+  prefetch: vi.fn(),
+};
 
 const validValues = {
   ruc: ' 0999999999001 ',
@@ -81,7 +89,7 @@ function apiError(status?: number, errors?: string[], network = false) {
 describe('RegisterClinicForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(mockRouter);
     vi.mocked(useSearchParams).mockReturnValue(
       new URLSearchParams() as ReturnType<typeof useSearchParams>
     );
@@ -319,7 +327,7 @@ describe('RegisterClinicForm', () => {
 describe('LoginPage registration confirmation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as ReturnType<typeof useRouter>);
+    vi.mocked(useRouter).mockReturnValue(mockRouter);
   });
 
   it('muestra la confirmaci\u00f3n solamente con registered=1', () => {

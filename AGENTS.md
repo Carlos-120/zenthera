@@ -1,5 +1,8 @@
 # Zenthera AI Development System
 
+CANONICAL_GLOBAL_RULES: YES
+GOVERNANCE_VERSION: 0.2.0
+
 ## Objetivo
 
 Desarrollar Zenthera de forma incremental, segura, verificable y documentada mediante agentes de inteligencia artificial supervisados por el propietario del proyecto.
@@ -44,6 +47,18 @@ sin aprobación humana.
 8. AI_SYSTEM/phases/current-phase.md
 9. AI_SYSTEM/tasks/active/
 10. AI_SYSTEM/handoffs/current-handoff.md
+
+## Carga obligatoria de reglas de agentes
+
+Antes de actuar, cada agente debe:
+
+1. localizar y leer este `AGENTS.md`;
+2. localizar y leer el archivo exacto de su rol activo;
+3. reportar las rutas, reglas cargadas y conflictos detectados;
+4. bloquearse si cualquiera de los dos archivos no está disponible.
+
+No se pueden mezclar los roles de Builder e Inspector en una misma sesión.
+No se puede delegar a agentes inexistentes o inactivos.
 
 ## Flujo obligatorio
 
@@ -103,6 +118,8 @@ Toda operación que maneje datos de una clínica debe:
 - No declarar una tarea terminada sin evidencia.
 - No cambiar contratos de API sin actualizar la documentación.
 - No hacer refactorizaciones no relacionadas con la tarea.
+- No usar `git add .` ni `git add -A`; el staging debe ser explícito por ruta.
+- No aceptar conclusiones sin evidencia reproducible.
 
 ## Definición de terminado
 

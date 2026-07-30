@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ClinicasPage from '../app/dashboard/clinicas/page';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as api from '@/lib/api/clinicas';
 import { useAuthStore } from '@/store/authStore';
 
@@ -23,8 +23,8 @@ vi.mock('@/lib/api/clinicas', () => ({
 
 const mockClinicasData = {
   content: [
-    { id: 1, ruc: '1111111111001', razonSocial: 'C1', nombre: 'Clinica 1', correo: 'c1@test.com', telefono: '123', activa: true },
-    { id: 2, ruc: '2222222222001', razonSocial: 'C2', nombre: 'Clinica 2', correo: 'c2@test.com', telefono: '456', activa: false },
+    { id: 1, ruc: '1111111111001', razonSocial: 'C1', nombre: 'Clinica 1', correo: 'c1@test.com', telefono: '123', direccion: null, ciudad: null, provincia: null, pais: null, zonaHoraria: 'UTC', logo: null, activa: true },
+    { id: 2, ruc: '2222222222001', razonSocial: 'C2', nombre: 'Clinica 2', correo: 'c2@test.com', telefono: '456', direccion: null, ciudad: null, provincia: null, pais: null, zonaHoraria: 'UTC', logo: null, activa: false },
   ],
   page: 0,
   size: 10,
@@ -58,8 +58,8 @@ describe('ClinicasPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAuthStore.setState({
-      usuario: { id: 1, correo: 'admin@test.com', nombres: 'Admin', apellidos: 'Test', cedula: '123', rol: 'SUPER_ADMIN', clinicaId: 1, clinicaNombre: 'Test' },
-      token: 'mock-token',
+      usuario: { id: 1, correo: 'admin@test.com', nombres: 'Admin', apellidos: 'Test', rol: 'SUPER_ADMIN', clinicaId: 1, clinicaNombre: 'Test' },
+      accessToken: 'mock-token',
       isAuthenticated: true
     });
   });
@@ -69,7 +69,7 @@ describe('ClinicasPage', () => {
 
   it('bloquea el acceso si el rol es incorrecto', () => {
     useAuthStore.setState({
-      usuario: { id: 2, correo: 'med@test.com', nombres: 'Med', apellidos: 'Test', cedula: '123', rol: 'MEDICO', clinicaId: 1, clinicaNombre: 'Test' },
+      usuario: { id: 2, correo: 'med@test.com', nombres: 'Med', apellidos: 'Test', rol: 'MEDICO', clinicaId: 1, clinicaNombre: 'Test' },
     });
 
     renderWithProviders(<ClinicasPage />);
