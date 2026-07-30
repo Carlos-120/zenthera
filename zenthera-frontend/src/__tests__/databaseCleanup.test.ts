@@ -1,13 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import type { QueryResult, QueryResultRow } from 'pg';
 import {
   cleanupRegisteredClinic,
   setDatabaseClientConstructorForTests,
   type RegisteredClinicCleanupIdentity,
 } from '../../e2e/helpers/database';
-
-type QueryResult = { rows: Record<string, unknown>[]; rowCount: number | null };
 
 const identity: RegisteredClinicCleanupIdentity = {
   adminCorreo: 'admin-run-123@e2e.invalid',
@@ -17,7 +16,10 @@ const identity: RegisteredClinicCleanupIdentity = {
   runMarker: 'run-123',
 };
 
-const result = (rows: Record<string, unknown>[] = [], rowCount: number | null = rows.length): QueryResult => ({
+const result = <Row extends QueryResultRow>(rows: Row[] = [], rowCount: number | null = rows.length): QueryResult<Row> => ({
+  command: 'SELECT',
+  oid: 0,
+  fields: [],
   rows,
   rowCount,
 });
@@ -39,7 +41,7 @@ const relatedData = {
 };
 
 class FakeClient {
-  static nextResponses: Array<QueryResult | Error> = [];
+  static nextResponses: Array<QueryResult<QueryResultRow> | Error> = [];
   static instances: FakeClient[] = [];
 
   queries: Array<{ sql: string; values?: unknown[] }> = [];
@@ -50,7 +52,8 @@ class FakeClient {
     FakeClient.instances.push(this);
   }
 
-  async query(sql: string, values?: unknown[]): Promise<QueryResult> {
+  query<Row extends QueryResultRow = QueryResultRow>(sql: string, values?: unknown[]): Promise<QueryResult<Row>>;
+  async query(sql: string, values?: unknown[]): Promise<QueryResult<QueryResultRow>> {
     this.queries.push({ sql, values });
     const response = FakeClient.nextResponses.shift();
     if (response instanceof Error) {
@@ -69,7 +72,7 @@ function successResponses(overrides: {
   deletedRefreshTokens?: number;
   deletedUser?: number;
   deletedClinic?: number;
-} = {}): QueryResult[] {
+} = {}): QueryResult<QueryResultRow>[] {
   const currentUser = { ...user, ...overrides.user };
   const currentClinic = { ...clinic, ...overrides.clinic };
   const clinicUsers = overrides.clinicUsers ?? [currentUser];
@@ -90,7 +93,7 @@ function successResponses(overrides: {
   ];
 }
 
-function prepare(responses: Array<QueryResult | Error>): void {
+function prepare(responses: Array<QueryResult<QueryResultRow> | Error>): void {
   FakeClient.instances = [];
   FakeClient.nextResponses = [...responses];
   setDatabaseClientConstructorForTests(FakeClient);

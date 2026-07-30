@@ -1,17 +1,12 @@
-type QueryResult<Row> = {
-  rows: Row[];
-  rowCount: number | null;
-};
+import { Client as PgClient, type QueryResult, type QueryResultRow } from 'pg';
 
 type DatabaseClient = {
-  connect(): Promise<void>;
-  query<Row = Record<string, unknown>>(sql: string, values?: unknown[]): Promise<QueryResult<Row>>;
+  connect(): Promise<unknown>;
+  query<Row extends QueryResultRow = QueryResultRow>(sql: string, values?: unknown[]): Promise<QueryResult<Row>>;
   end(): Promise<void>;
 };
 
 type DatabaseClientConstructor = new (config: { connectionString: string }) => DatabaseClient;
-
-const { Client: PgClient } = require('pg') as { Client: DatabaseClientConstructor };
 
 const ALLOWED_E2E_SCHEMAS = new Set(['e2e_clean_11']);
 const FIXTURE_RUCS = new Set(['E2E-ALPHA-001', 'E2E-BETA-001']);
@@ -85,7 +80,7 @@ function normalized(value: string): string {
   return value.trim().toLocaleLowerCase('en-US');
 }
 
-function expectedSingleRow<Row>(result: QueryResult<Row>): Row {
+function expectedSingleRow<Row extends QueryResultRow>(result: QueryResult<Row>): Row {
   if (result.rows.length !== 1) {
     throw new Error(OWNERSHIP_FAILURE);
   }

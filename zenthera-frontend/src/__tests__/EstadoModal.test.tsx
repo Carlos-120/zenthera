@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { EstadoModal } from '../components/clinica/EstadoModal';
 import { ClinicaResponse } from '@/lib/api/clinicas';
-import { vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockClinicaActiva: ClinicaResponse = {
   id: 1,
