@@ -25,6 +25,16 @@ public class SuperAdminClinicaController {
         this.clinicaService = clinicaService;
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<ClinicaResponse>> obtenerDetalle(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.<ClinicaResponse>builder()
+                .success(true)
+                .message("Detalle de clínica obtenido correctamente")
+                .data(clinicaService.obtenerDetalle(id))
+                .build());
+    }
+
     @PostMapping
     @PreAuthorize("hasAuthority('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<ClinicaResponse>> createClinica(

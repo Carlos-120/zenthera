@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 public interface ClinicaService {
 
     // Para ADMIN_CLINICA
+    ClinicaResponse obtenerDetalle(Long id);
+
     ClinicaResponse getMiClinica(Long clinicaId);
     ClinicaResponse updateMiClinica(Long clinicaId, ClinicaUpdateRequest request);
 
