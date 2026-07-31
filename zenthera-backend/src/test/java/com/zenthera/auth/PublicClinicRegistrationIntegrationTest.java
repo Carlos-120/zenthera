@@ -97,6 +97,9 @@ class PublicClinicRegistrationIntegrationTest {
                 rolRepository.findById(admin.getRol().getId()).orElseThrow().getNombre());
         assertNotEquals(RolNombre.SUPER_ADMIN,
                 rolRepository.findById(admin.getRol().getId()).orElseThrow().getNombre());
+        assertTrue(clinica.getTerminosAceptados());
+        assertNotNull(clinica.getTerminosAceptadosEn());
+        assertEquals(com.zenthera.service.impl.ClinicaServiceImpl.CURRENT_TERMS_VERSION, clinica.getTerminosVersion());
         assertTrue(notificationService.getTokenForEmail("admin@registro.test").isPresent());
         assertEquals(clinica.getId(), admin.getClinica().getId());
         assertFalse(admin.getActivo());
@@ -233,6 +236,7 @@ class PublicClinicRegistrationIntegrationTest {
         privilegedPayload.put("plan", "ENTERPRISE");
         privilegedPayload.put("modulos", Set.of("TODOS"));
         privilegedPayload.put("fechaActivacion", "2099-01-01T00:00:00Z");
+        privilegedPayload.put("terminosAceptados", true);
         mockMvc.perform(post(REGISTER_URL).header("Origin", "http://localhost:3000")
                         .header("X-Requested-With", "XMLHttpRequest").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(privilegedPayload)))
@@ -355,6 +359,63 @@ class PublicClinicRegistrationIntegrationTest {
         assertEquals(1, activationTokenRepository.count());
     }
 
+    @Test
+    void registerClinic_rejectsWhenTermsAreFalse() throws Exception {
+        long initialTokens = activationTokenRepository.count();
+        PublicClinicRegistrationRequest request = validRequest("0999999999030", "false_terms@test.com", "0100000030");
+        request.setTerminosAceptados(false);
+
+        mockMvc.perform(register(request))
+                .andExpect(status().isBadRequest());
+                
+        assertTrue(clinicaRepository.findByRuc("0999999999030").isEmpty());
+        assertTrue(usuarioRepository.findByCorreo("false_terms@test.com").isEmpty());
+        assertEquals(initialTokens, activationTokenRepository.count());
+        assertTrue(notificationService.getTokenForEmail("false_terms@test.com").isEmpty());
+    }
+
+    @Test
+    void registerClinic_rejectsWhenTermsAreNull() throws Exception {
+        long initialTokens = activationTokenRepository.count();
+        PublicClinicRegistrationRequest request = validRequest("0999999999031", "null_terms@test.com", "0100000031");
+        request.setTerminosAceptados(null);
+
+        mockMvc.perform(register(request))
+                .andExpect(status().isBadRequest());
+
+        assertTrue(clinicaRepository.findByRuc("0999999999031").isEmpty());
+        assertTrue(usuarioRepository.findByCorreo("null_terms@test.com").isEmpty());
+        assertEquals(initialTokens, activationTokenRepository.count());
+        assertTrue(notificationService.getTokenForEmail("null_terms@test.com").isEmpty());
+    }
+
+    @Test
+    void registerClinic_rejectsWhenTermsAreMissing() throws Exception {
+        long initialTokens = activationTokenRepository.count();
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("ruc", "0999999999032");
+        payload.put("razonSocial", "Missing Terms SA");
+        payload.put("nombre", "Missing Terms Clinic");
+        payload.put("correo", "missing_terms_clinic@test.com");
+        payload.put("telefono", "0999999999");
+        payload.put("adminNombres", "Admin");
+        payload.put("adminApellidos", "Missing");
+        payload.put("adminCedula", "0100000032");
+        payload.put("adminCorreo", "missing_terms@test.com");
+        payload.put("password", "RegistroSeguro123!");
+        // terminosAceptados is intentionally missing
+
+        mockMvc.perform(post(REGISTER_URL).header("Origin", "http://localhost:3000")
+                        .header("X-Requested-With", "XMLHttpRequest").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isBadRequest());
+
+        assertTrue(clinicaRepository.findByRuc("0999999999032").isEmpty());
+        assertTrue(usuarioRepository.findByCorreo("missing_terms@test.com").isEmpty());
+        assertEquals(initialTokens, activationTokenRepository.count());
+        assertTrue(notificationService.getTokenForEmail("missing_terms@test.com").isEmpty());
+    }
+
     private PublicClinicRegistrationRequest validRequest(String ruc, String adminCorreo, String adminCedula) {
         PublicClinicRegistrationRequest request = new PublicClinicRegistrationRequest();
         request.setRuc(ruc);
@@ -367,6 +428,7 @@ class PublicClinicRegistrationIntegrationTest {
         request.setAdminCedula(adminCedula);
         request.setAdminCorreo(adminCorreo);
         request.setPassword("RegistroSeguro123!");
+        request.setTerminosAceptados(true);
         return request;
     }
 

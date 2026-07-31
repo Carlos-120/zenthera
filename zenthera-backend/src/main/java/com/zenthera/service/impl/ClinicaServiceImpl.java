@@ -50,6 +50,7 @@ import java.util.Locale;
 public class ClinicaServiceImpl implements ClinicaService {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    public static final String CURRENT_TERMS_VERSION = "2026-07-v1";
 
     private String generateActivationToken() {
         byte[] bytes = new byte[32]; // 256 bits
@@ -176,6 +177,12 @@ public class ClinicaServiceImpl implements ClinicaService {
         clinica.setZonaHoraria("America/Guayaquil");
         clinica.setDireccion("Pendiente");
 
+        if (Boolean.TRUE.equals(request.getTerminosAceptados())) {
+            clinica.setTerminosAceptados(true);
+            clinica.setTerminosAceptadosEn(Instant.now());
+            clinica.setTerminosVersion(CURRENT_TERMS_VERSION);
+        }
+
         clinica = clinicaRepository.save(clinica);
 
         // Crear primer administrador
@@ -222,6 +229,10 @@ public class ClinicaServiceImpl implements ClinicaService {
         String clinicCorreo = normalizeEmail(request.getCorreo());
         String adminCorreo = normalizeEmail(request.getAdminCorreo());
         String adminCedula = request.getAdminCedula().trim();
+        if (!Boolean.TRUE.equals(request.getTerminosAceptados())) {
+            throw new BusinessRuleException("Debe aceptar explícitamente los términos y condiciones.", HttpStatus.BAD_REQUEST);
+        }
+
         if (clinicaRepository.findByRuc(ruc).isPresent()
                 || clinicaRepository.findByCorreoNormalized(clinicCorreo).isPresent()
                 || usuarioRepository.findByCorreoNormalized(adminCorreo).isPresent()
@@ -239,6 +250,7 @@ public class ClinicaServiceImpl implements ClinicaService {
         internalRequest.setAdminApellidos(request.getAdminApellidos().trim());
         internalRequest.setAdminCedula(adminCedula);
         internalRequest.setAdminCorreo(adminCorreo);
+        internalRequest.setTerminosAceptados(request.getTerminosAceptados());
 
         createClinica(internalRequest);
         Usuario admin = usuarioRepository.findByCorreo(adminCorreo)
