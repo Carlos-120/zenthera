@@ -225,37 +225,58 @@ public class ClinicaServiceImpl implements ClinicaService {
     @Override
     @Transactional
     public PublicClinicRegistrationResponse registerPublicClinic(PublicClinicRegistrationRequest request) {
-        String ruc = request.getRuc().trim();
-        String clinicCorreo = normalizeEmail(request.getCorreo());
         String adminCorreo = normalizeEmail(request.getAdminCorreo());
-        String adminCedula = request.getAdminCedula().trim();
         if (!Boolean.TRUE.equals(request.getTerminosAceptados())) {
             throw new BusinessRuleException("Debe aceptar explícitamente los términos y condiciones.", HttpStatus.BAD_REQUEST);
         }
 
-        if (clinicaRepository.findByRuc(ruc).isPresent()
-                || clinicaRepository.findByCorreoNormalized(clinicCorreo).isPresent()
-                || usuarioRepository.findByCorreoNormalized(adminCorreo).isPresent()
-                || usuarioRepository.existsByCedula(adminCedula)) {
+        if (usuarioRepository.findByCorreoNormalized(adminCorreo).isPresent()) {
             throw new BusinessRuleException("No se puede completar el registro con los datos proporcionados.", HttpStatus.CONFLICT);
         }
 
-        ClinicaCreateRequest internalRequest = new ClinicaCreateRequest();
-        internalRequest.setRuc(ruc);
-        internalRequest.setRazonSocial(request.getRazonSocial().trim());
-        internalRequest.setNombre(request.getNombre().trim());
-        internalRequest.setCorreo(clinicCorreo);
-        internalRequest.setTelefono(request.getTelefono().trim());
-        internalRequest.setAdminNombres(request.getAdminNombres().trim());
-        internalRequest.setAdminApellidos(request.getAdminApellidos().trim());
-        internalRequest.setAdminCedula(adminCedula);
-        internalRequest.setAdminCorreo(adminCorreo);
-        internalRequest.setTerminosAceptados(request.getTerminosAceptados());
+        // Crear la clínica mínima
+        Clinica clinica = new Clinica();
+        clinica.setNombre(request.getNombre().trim());
+        clinica.setActiva(true);
+        // Valores por defecto
+        clinica.setZonaHoraria("America/Guayaquil");
+        clinica.setDireccion("Pendiente");
 
-        createClinica(internalRequest);
-        Usuario admin = usuarioRepository.findByCorreo(adminCorreo)
-                .orElseThrow(() -> new IllegalStateException("No se pudo completar el registro."));
+        clinica.setTerminosAceptados(true);
+        clinica.setTerminosAceptadosEn(Instant.now());
+        clinica.setTerminosVersion(CURRENT_TERMS_VERSION);
+
+        clinica = clinicaRepository.save(clinica);
+
+        // Crear primer administrador
+        Rol rolAdmin = rolRepository.findByNombre(RolNombre.ADMIN_CLINICA)
+                .orElseThrow(() -> new RuntimeException("Rol ADMIN_CLINICA no encontrado"));
+
+        Usuario admin = new Usuario();
+        admin.setClinica(clinica);
+        admin.setRol(rolAdmin);
+        admin.setNombres(request.getAdminNombres().trim());
+        admin.setApellidos(request.getAdminApellidos().trim());
+        admin.setCorreo(adminCorreo);
+
         admin.setPassword(passwordEncoder.encode(request.getPassword()));
+        admin.setCambiarPassword(true);
+        admin.setActivo(false); // Inactivo hasta que active su cuenta
+        admin.setBloqueado(false);
+
+        admin = usuarioRepository.save(admin);
+
+        // Generar token opaco
+        String token = generateActivationToken();
+        String tokenHash = HashUtil.sha256(token);
+
+        ActivationToken activationToken = new ActivationToken();
+        activationToken.setUsuario(admin);
+        activationToken.setTokenHash(tokenHash);
+        activationToken.setExpiresAt(Instant.now().plus(24, ChronoUnit.HOURS));
+        activationTokenRepository.save(activationToken);
+
+        eventPublisher.publishEvent(new ActivationNotificationEvent(admin.getCorreo(), token));
 
         return new PublicClinicRegistrationResponse(adminCorreo, "PENDIENTE_ACTIVACION");
     }

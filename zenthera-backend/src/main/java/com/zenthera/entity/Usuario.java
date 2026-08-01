@@ -29,7 +29,7 @@ public class Usuario extends BaseEntity {
     @Column(nullable = false, length = 120)
     private String apellidos;
 
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private String cedula;
 
     @Column(length = 20)

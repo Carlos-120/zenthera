@@ -42,7 +42,7 @@ public class Clinica extends BaseEntity {
     @Column(length = 255)
     private String logo;
 
-    @Column(name = "razon_social", nullable = false, length = 150)
+    @Column(name = "razon_social", length = 150)
     private String razonSocial;
 
     @Column(name = "zona_horaria", nullable = false, length = 50)

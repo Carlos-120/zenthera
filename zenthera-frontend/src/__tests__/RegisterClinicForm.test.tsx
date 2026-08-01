@@ -28,17 +28,13 @@ const mockRouter = {
 };
 
 const validValues = {
-  ruc: ' 0999999999001 ',
-  razonSocial: ' Cl\u00ednica Prueba S.A. ',
   nombre: ' Cl\u00ednica Prueba ',
-  correo: ' CONTACTO@PRUEBA.COM ',
-  telefono: ' 0999999999 ',
   adminNombres: ' Ana ',
   adminApellidos: ' P\u00e9rez ',
-  adminCedula: ' 0100000001 ',
   adminCorreo: ' ADMIN@PRUEBA.COM ',
   password: 'RegistroSeguro123!',
   confirmPassword: 'RegistroSeguro123!',
+  terminosAceptados: true,
 };
 
 function renderWithQuery(component: React.ReactNode) {
@@ -51,25 +47,26 @@ function renderWithQuery(component: React.ReactNode) {
 
 function fillValidForm() {
   Object.entries(validValues).forEach(([name, value]) => {
-    fireEvent.change(screen.getByLabelText(new RegExp(labelFor(name), 'i')), {
-      target: { value },
-    });
+    if (name === 'terminosAceptados') {
+      const checkbox = screen.getByLabelText(new RegExp(labelFor(name), 'i')) as HTMLInputElement;
+      if (!checkbox.checked) fireEvent.click(checkbox);
+    } else {
+      fireEvent.change(screen.getByLabelText(new RegExp(labelFor(name), 'i')), {
+        target: { value },
+      });
+    }
   });
 }
 
 function labelFor(name: string) {
   const labels: Record<string, string> = {
-    ruc: 'RUC',
-    razonSocial: 'Raz\u00f3n social',
     nombre: 'Nombre de la cl\u00ednica',
-    correo: 'Correo de la cl\u00ednica',
-    telefono: 'Tel\u00e9fono',
     adminNombres: 'Nombres',
     adminApellidos: 'Apellidos',
-    adminCedula: 'C\u00e9dula del administrador',
     adminCorreo: 'Correo del administrador',
     password: '^Contrase\u00f1a$',
     confirmPassword: 'Confirmar contrase\u00f1a',
+    terminosAceptados: 'Acepto los t\u00e9rminos y condiciones del servicio',
   };
 
   return labels[name];
@@ -110,23 +107,16 @@ describe('RegisterClinicForm', () => {
     });
   });
 
-  it('muestra los errores de campos obligatorios', async () => {
+  it('muestra los errores de campos obligatorios y t\u00e9rminos', async () => {
     renderWithQuery(<RegisterClinicForm />);
     submitRegistration();
 
-    expect(await screen.findByText('El RUC es obligatorio')).toBeInTheDocument();
+    expect(await screen.findByText('El nombre de la clínica es obligatorio')).toBeInTheDocument();
     expect(screen.getByText('La contrase\u00f1a es obligatoria')).toBeInTheDocument();
+    expect(screen.getByText('Debes aceptar los t\u00e9rminos y condiciones')).toBeInTheDocument();
   });
 
-  it('valida un correo de cl\u00ednica inv\u00e1lido', async () => {
-    renderWithQuery(<RegisterClinicForm />);
-    fillValidForm();
-    fireEvent.change(screen.getByLabelText('Correo de la cl\u00ednica'), { target: { value: 'correo-invalido' } });
-    submitRegistration();
 
-    expect(await screen.findByText('Correo de cl\u00ednica inv\u00e1lido')).toBeInTheDocument();
-    expect(registerClinicMock).not.toHaveBeenCalled();
-  });
 
   it('valida un correo del administrador inv\u00e1lido', async () => {
     renderWithQuery(<RegisterClinicForm />);
@@ -154,16 +144,12 @@ describe('RegisterClinicForm', () => {
 
     await waitFor(() => {
       expect(registerClinicMock.mock.calls[0][0]).toEqual({
-        ruc: '0999999999001',
-        razonSocial: 'Cl\u00ednica Prueba S.A.',
         nombre: 'Cl\u00ednica Prueba',
-        correo: 'contacto@prueba.com',
-        telefono: '0999999999',
         adminNombres: 'Ana',
         adminApellidos: 'P\u00e9rez',
-        adminCedula: '0100000001',
         adminCorreo: 'admin@prueba.com',
         password: validValues.password,
+        terminosAceptados: true,
       });
     });
     expect(Object.keys(registerClinicMock.mock.calls[0][0])).not.toContain('confirmPassword');
@@ -218,24 +204,7 @@ describe('RegisterClinicForm', () => {
     expect(screen.getByLabelText('Correo del administrador')).toHaveAttribute('aria-invalid', 'true');
   });
 
-  it('anuncia el error de campo y lo desvincula al corregirlo', async () => {
-    renderWithQuery(<RegisterClinicForm />);
-    fillValidForm();
-    const correo = screen.getByLabelText('Correo de la cl\u00ednica');
-    fireEvent.change(correo, { target: { value: 'correo-invalido' } });
-    submitRegistration();
 
-    const error = await screen.findByText('Correo de cl\u00ednica inv\u00e1lido');
-    expect(error).toHaveAttribute('role', 'alert');
-    expect(error).toHaveAttribute('id', 'correo-error');
-    expect(correo).toHaveAttribute('aria-describedby', 'correo-error');
-
-    fireEvent.change(correo, { target: { value: 'contacto@prueba.com' } });
-    await waitFor(() => {
-      expect(screen.queryByText('Correo de cl\u00ednica inv\u00e1lido')).not.toBeInTheDocument();
-      expect(correo).not.toHaveAttribute('aria-describedby');
-    });
-  });
 
   it('muestra un mensaje gen\u00e9rico ante datos duplicados', async () => {
     registerClinicMock.mockRejectedValue(apiError(409));
@@ -264,9 +233,6 @@ describe('RegisterClinicForm', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('No fue posible completar el registro. Int\u00e9ntalo nuevamente m\u00e1s tarde.');
     expect(alert).not.toHaveTextContent('http://localhost:8080');
-    expect(alert).not.toHaveTextContent(validValues.correo.trim());
-    expect(alert).not.toHaveTextContent(validValues.ruc.trim());
-    expect(alert).not.toHaveTextContent(validValues.adminCedula.trim());
     expect(alert).not.toHaveTextContent(validValues.password);
   });
 

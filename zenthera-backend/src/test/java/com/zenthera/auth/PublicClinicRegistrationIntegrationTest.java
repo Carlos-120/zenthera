@@ -80,7 +80,7 @@ class PublicClinicRegistrationIntegrationTest {
 
     @Test
     void registerClinic_createsPendingAdminWithSafeResponseAndActivationToken() throws Exception {
-        PublicClinicRegistrationRequest request = validRequest("0999999999001", "admin@registro.test", "0100000001");
+        PublicClinicRegistrationRequest request = validRequest("admin@registro.test");
 
         mockMvc.perform(register(request))
                 .andExpect(status().isCreated())
@@ -90,8 +90,8 @@ class PublicClinicRegistrationIntegrationTest {
                 .andExpect(jsonPath("$.data.password").doesNotExist())
                 .andExpect(jsonPath("$.data.accessToken").doesNotExist());
 
-        Clinica clinica = clinicaRepository.findByRuc("0999999999001").orElseThrow();
         Usuario admin = usuarioRepository.findByCorreo("admin@registro.test").orElseThrow();
+        Clinica clinica = clinicaRepository.findById(admin.getClinica().getId()).orElseThrow();
         assertTrue(clinica.getActiva());
         assertEquals(RolNombre.ADMIN_CLINICA,
                 rolRepository.findById(admin.getRol().getId()).orElseThrow().getNombre());
@@ -111,7 +111,7 @@ class PublicClinicRegistrationIntegrationTest {
 
     @Test
     void registerClinic_blocksLoginUntilActivationThenAllowsLogin() throws Exception {
-        PublicClinicRegistrationRequest request = validRequest("0999999999002", "admin.activar@test.com", "0100000002");
+        PublicClinicRegistrationRequest request = validRequest("admin.activar@test.com");
         mockMvc.perform(register(request)).andExpect(status().isCreated());
 
         LoginRequest login = new LoginRequest();
@@ -141,58 +141,13 @@ class PublicClinicRegistrationIntegrationTest {
 
     @Test
     void registerClinic_rejectsNormalizedDuplicateAdminEmail() throws Exception {
-        mockMvc.perform(register(validRequest("0999999999003", "admin.duplicado@test.com", "0100000003")))
+        mockMvc.perform(register(validRequest("admin.duplicado@test.com")))
                 .andExpect(status().isCreated());
 
-        PublicClinicRegistrationRequest duplicate = validRequest("0999999999004", "ADMIN.DUPLICADO@TEST.COM", "0100000004");
+        PublicClinicRegistrationRequest duplicate = validRequest("ADMIN.DUPLICADO@TEST.COM");
         mockMvc.perform(register(duplicate))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false));
-    }
-
-    @Test
-    void registerClinic_rejectsDuplicateClinicRuc() throws Exception {
-        mockMvc.perform(register(validRequest("0999999999005", "admin.ruc.unico@test.com", "0100000005")))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(register(validRequest("0999999999005", "admin.ruc.duplicado@test.com", "0100000006")))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.success").value(false));
-    }
-
-    @Test
-    void registerClinic_rejectsExactDuplicateClinicEmail() throws Exception {
-        PublicClinicRegistrationRequest first = validRequest("0999999999012", "admin.correo.exacto.1@test.com", "0100000012");
-        first.setCorreo("contacto.duplicado@test.com");
-        mockMvc.perform(register(first)).andExpect(status().isCreated());
-
-        PublicClinicRegistrationRequest duplicate = validRequest("0999999999013", "admin.correo.exacto.2@test.com", "0100000013");
-        duplicate.setCorreo("contacto.duplicado@test.com");
-        mockMvc.perform(register(duplicate))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("No se puede completar el registro con los datos proporcionados."));
-    }
-
-    @Test
-    void registerClinic_rejectsCaseInsensitiveDuplicateClinicEmail() throws Exception {
-        PublicClinicRegistrationRequest first = validRequest("0999999999014", "admin.correo.mayus.1@test.com", "0100000014");
-        first.setCorreo("contacto.mayusculas@test.com");
-        mockMvc.perform(register(first)).andExpect(status().isCreated());
-
-        PublicClinicRegistrationRequest duplicate = validRequest("0999999999015", "admin.correo.mayus.2@test.com", "0100000015");
-        duplicate.setCorreo("CONTACTO.MAYUSCULAS@TEST.COM");
-        mockMvc.perform(register(duplicate)).andExpect(status().isConflict());
-    }
-
-    @Test
-    void registerClinic_rejectsTrimmedDuplicateClinicEmail() throws Exception {
-        PublicClinicRegistrationRequest first = validRequest("0999999999016", "admin.correo.espacios.1@test.com", "0100000016");
-        first.setCorreo("contacto.espacios@test.com");
-        mockMvc.perform(register(first)).andExpect(status().isCreated());
-
-        PublicClinicRegistrationRequest duplicate = validRequest("0999999999017", "admin.correo.espacios.2@test.com", "0100000017");
-        duplicate.setCorreo("  CONTACTO.ESPACIOS@TEST.COM  ");
-        mockMvc.perform(register(duplicate)).andExpect(status().isConflict());
     }
 
     @Test
@@ -210,21 +165,16 @@ class PublicClinicRegistrationIntegrationTest {
 
     @Test
     void registerClinic_rejectsInvalidDataAndIgnoresPrivilegedUnknownFields() throws Exception {
-        PublicClinicRegistrationRequest invalid = validRequest("0999999999005", "correo-invalido", "0100000005");
+        PublicClinicRegistrationRequest invalid = validRequest("correo-invalido");
         invalid.setPassword("corta");
         mockMvc.perform(register(invalid))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
 
         Map<String, Object> privilegedPayload = new LinkedHashMap<>();
-        privilegedPayload.put("ruc", "0999999999006");
-        privilegedPayload.put("razonSocial", "Registro Seguro SA");
         privilegedPayload.put("nombre", "Registro Seguro");
-        privilegedPayload.put("correo", "clinica.privilegiada@test.com");
-        privilegedPayload.put("telefono", "0999999999");
         privilegedPayload.put("adminNombres", "Admin");
         privilegedPayload.put("adminApellidos", "Registro");
-        privilegedPayload.put("adminCedula", "0100000006");
         privilegedPayload.put("adminCorreo", "admin.privilegiado@test.com");
         privilegedPayload.put("password", "RegistroSeguro123!");
         privilegedPayload.put("rol", "SUPER_ADMIN");
@@ -243,7 +193,7 @@ class PublicClinicRegistrationIntegrationTest {
                 .andExpect(status().isCreated());
 
         Usuario admin = usuarioRepository.findByCorreo("admin.privilegiado@test.com").orElseThrow();
-        Clinica clinica = clinicaRepository.findByRuc("0999999999006").orElseThrow();
+        Clinica clinica = clinicaRepository.findById(admin.getClinica().getId()).orElseThrow();
         assertEquals(RolNombre.ADMIN_CLINICA,
                 rolRepository.findById(admin.getRol().getId()).orElseThrow().getNombre());
         assertNotEquals(RolNombre.SUPER_ADMIN,
@@ -256,46 +206,14 @@ class PublicClinicRegistrationIntegrationTest {
     }
 
     @Test
-    void registerClinic_rejectsDuplicateCedula() throws Exception {
-        Rol rolAdmin = rolRepository.findByNombre(RolNombre.ADMIN_CLINICA).orElseThrow();
-        Clinica existingClinic = new Clinica();
-        existingClinic.setRuc("0999999999010");
-        existingClinic.setRazonSocial("Existente SA");
-        existingClinic.setNombre("Existente");
-        existingClinic.setCorreo("existente@test.com");
-        existingClinic.setTelefono("0999999999");
-        existingClinic.setDireccion("Dirección");
-        existingClinic.setZonaHoraria("America/Guayaquil");
-        existingClinic = clinicaRepository.save(existingClinic);
-        Usuario existingAdmin = new Usuario();
-        existingAdmin.setClinica(existingClinic);
-        existingAdmin.setRol(rolAdmin);
-        existingAdmin.setNombres("Admin");
-        existingAdmin.setApellidos("Existente");
-        existingAdmin.setCedula("0100000099");
-        existingAdmin.setCorreo("existente.admin@test.com");
-        existingAdmin.setPassword(passwordEncoder.encode("RegistroSeguro123!"));
-        existingAdmin.setActivo(true);
-        existingAdmin.setBloqueado(false);
-        existingAdmin.setCambiarPassword(false);
-        usuarioRepository.saveAndFlush(existingAdmin);
-
-        mockMvc.perform(register(validRequest("0999999999011", "admin.rollback@test.com", "0100000099")))
-                .andExpect(status().isConflict());
-
-        assertTrue(clinicaRepository.findByRuc("0999999999011").isEmpty());
-        assertTrue(usuarioRepository.findByCorreo("admin.rollback@test.com").isEmpty());
-    }
-
-    @Test
     void registerClinic_rollsBackWhenActivationTokenPersistenceFails() throws Exception {
         doThrow(new DataIntegrityViolationException("activation token persistence failed"))
                 .when(activationTokenRepository).save(any(ActivationToken.class));
 
-        mockMvc.perform(register(validRequest("0999999999018", "admin.activation.rollback@test.com", "0100000018")))
+        mockMvc.perform(register(validRequest("admin.activation.rollback@test.com")))
                 .andExpect(status().isConflict());
 
-        assertTrue(clinicaRepository.findByRuc("0999999999018").isEmpty());
+        assertTrue(clinicaRepository.findAll().isEmpty());
         assertTrue(usuarioRepository.findByCorreo("admin.activation.rollback@test.com").isEmpty());
         assertEquals(0, activationTokenRepository.count());
         assertTrue(notificationService.getTokenForEmail("admin.activation.rollback@test.com").isEmpty());
@@ -306,10 +224,10 @@ class PublicClinicRegistrationIntegrationTest {
         doThrow(new DataIntegrityViolationException("administrator persistence failed"))
                 .when(usuarioRepository).save(any(Usuario.class));
 
-        mockMvc.perform(register(validRequest("0999999999019", "admin.persistence.rollback@test.com", "0100000019")))
+        mockMvc.perform(register(validRequest("admin.persistence.rollback@test.com")))
                 .andExpect(status().isConflict());
 
-        assertTrue(clinicaRepository.findByRuc("0999999999019").isEmpty());
+        assertTrue(clinicaRepository.findAll().isEmpty());
         assertTrue(usuarioRepository.findByCorreo("admin.persistence.rollback@test.com").isEmpty());
         assertEquals(0, activationTokenRepository.count());
         assertTrue(notificationService.getTokenForEmail("admin.persistence.rollback@test.com").isEmpty());
@@ -319,10 +237,10 @@ class PublicClinicRegistrationIntegrationTest {
     void registerClinic_rollsBackWhenAdminRoleCannotBeResolved() throws Exception {
         doReturn(Optional.empty()).when(rolRepository).findByNombre(RolNombre.ADMIN_CLINICA);
 
-        mockMvc.perform(register(validRequest("0999999999020", "admin.role.rollback@test.com", "0100000020")))
+        mockMvc.perform(register(validRequest("admin.role.rollback@test.com")))
                 .andExpect(status().isInternalServerError());
 
-        assertTrue(clinicaRepository.findByRuc("0999999999020").isEmpty());
+        assertTrue(clinicaRepository.findAll().isEmpty());
         assertTrue(usuarioRepository.findByCorreo("admin.role.rollback@test.com").isEmpty());
         assertEquals(0, activationTokenRepository.count());
         assertTrue(notificationService.getTokenForEmail("admin.role.rollback@test.com").isEmpty());
@@ -351,10 +269,10 @@ class PublicClinicRegistrationIntegrationTest {
         doThrow(new IllegalStateException("notification failure"))
                 .when(notificationServiceSpy).sendActivationToken(anyString(), anyString());
 
-        mockMvc.perform(register(validRequest("0999999999019", "admin.notification.rollback@test.com", "0100000019")))
+        mockMvc.perform(register(validRequest("admin.notification.rollback@test.com")))
                 .andExpect(status().isCreated());
 
-        assertTrue(clinicaRepository.findByRuc("0999999999019").isPresent());
+        assertFalse(clinicaRepository.findAll().isEmpty());
         assertTrue(usuarioRepository.findByCorreo("admin.notification.rollback@test.com").isPresent());
         assertEquals(1, activationTokenRepository.count());
     }
@@ -362,13 +280,13 @@ class PublicClinicRegistrationIntegrationTest {
     @Test
     void registerClinic_rejectsWhenTermsAreFalse() throws Exception {
         long initialTokens = activationTokenRepository.count();
-        PublicClinicRegistrationRequest request = validRequest("0999999999030", "false_terms@test.com", "0100000030");
+        PublicClinicRegistrationRequest request = validRequest("false_terms@test.com");
         request.setTerminosAceptados(false);
 
         mockMvc.perform(register(request))
                 .andExpect(status().isBadRequest());
                 
-        assertTrue(clinicaRepository.findByRuc("0999999999030").isEmpty());
+        assertTrue(clinicaRepository.findAll().isEmpty());
         assertTrue(usuarioRepository.findByCorreo("false_terms@test.com").isEmpty());
         assertEquals(initialTokens, activationTokenRepository.count());
         assertTrue(notificationService.getTokenForEmail("false_terms@test.com").isEmpty());
@@ -377,13 +295,13 @@ class PublicClinicRegistrationIntegrationTest {
     @Test
     void registerClinic_rejectsWhenTermsAreNull() throws Exception {
         long initialTokens = activationTokenRepository.count();
-        PublicClinicRegistrationRequest request = validRequest("0999999999031", "null_terms@test.com", "0100000031");
+        PublicClinicRegistrationRequest request = validRequest("null_terms@test.com");
         request.setTerminosAceptados(null);
 
         mockMvc.perform(register(request))
                 .andExpect(status().isBadRequest());
 
-        assertTrue(clinicaRepository.findByRuc("0999999999031").isEmpty());
+        assertTrue(clinicaRepository.findAll().isEmpty());
         assertTrue(usuarioRepository.findByCorreo("null_terms@test.com").isEmpty());
         assertEquals(initialTokens, activationTokenRepository.count());
         assertTrue(notificationService.getTokenForEmail("null_terms@test.com").isEmpty());
@@ -393,14 +311,9 @@ class PublicClinicRegistrationIntegrationTest {
     void registerClinic_rejectsWhenTermsAreMissing() throws Exception {
         long initialTokens = activationTokenRepository.count();
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("ruc", "0999999999032");
-        payload.put("razonSocial", "Missing Terms SA");
         payload.put("nombre", "Missing Terms Clinic");
-        payload.put("correo", "missing_terms_clinic@test.com");
-        payload.put("telefono", "0999999999");
         payload.put("adminNombres", "Admin");
         payload.put("adminApellidos", "Missing");
-        payload.put("adminCedula", "0100000032");
         payload.put("adminCorreo", "missing_terms@test.com");
         payload.put("password", "RegistroSeguro123!");
         // terminosAceptados is intentionally missing
@@ -410,22 +323,17 @@ class PublicClinicRegistrationIntegrationTest {
                         .content(objectMapper.writeValueAsString(payload)))
                 .andExpect(status().isBadRequest());
 
-        assertTrue(clinicaRepository.findByRuc("0999999999032").isEmpty());
+        assertTrue(clinicaRepository.findAll().isEmpty());
         assertTrue(usuarioRepository.findByCorreo("missing_terms@test.com").isEmpty());
         assertEquals(initialTokens, activationTokenRepository.count());
         assertTrue(notificationService.getTokenForEmail("missing_terms@test.com").isEmpty());
     }
 
-    private PublicClinicRegistrationRequest validRequest(String ruc, String adminCorreo, String adminCedula) {
+    private PublicClinicRegistrationRequest validRequest(String adminCorreo) {
         PublicClinicRegistrationRequest request = new PublicClinicRegistrationRequest();
-        request.setRuc(ruc);
-        request.setRazonSocial("Registro Seguro SA");
         request.setNombre("Registro Seguro");
-        request.setCorreo("clinica." + ruc + "@test.com");
-        request.setTelefono("0999999999");
         request.setAdminNombres("Admin");
         request.setAdminApellidos("Registro");
-        request.setAdminCedula(adminCedula);
         request.setAdminCorreo(adminCorreo);
         request.setPassword("RegistroSeguro123!");
         request.setTerminosAceptados(true);

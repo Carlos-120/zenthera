@@ -12,30 +12,14 @@ import lombok.Setter;
 @Setter
 public class PublicClinicRegistrationRequest {
 
-    @NotBlank(message = "El RUC es obligatorio")
-    private String ruc;
-
-    @NotBlank(message = "La razón social es obligatoria")
-    private String razonSocial;
-
     @NotBlank(message = "El nombre de la clínica es obligatorio")
     private String nombre;
-
-    @NotBlank(message = "El correo de la clínica es obligatorio")
-    @Email(message = "Correo de clínica inválido")
-    private String correo;
-
-    @NotBlank(message = "El teléfono es obligatorio")
-    private String telefono;
 
     @NotBlank(message = "Los nombres del administrador son obligatorios")
     private String adminNombres;
 
     @NotBlank(message = "Los apellidos del administrador son obligatorios")
     private String adminApellidos;
-
-    @NotBlank(message = "La cédula del administrador es obligatoria")
-    private String adminCedula;
 
     @NotBlank(message = "El correo del administrador es obligatorio")
     @Email(message = "Correo del administrador inválido")
@@ -48,10 +32,6 @@ public class PublicClinicRegistrationRequest {
     @NotNull(message = "Debe aceptar los términos y condiciones")
     @AssertTrue(message = "Debe aceptar explícitamente los términos y condiciones")
     private Boolean terminosAceptados;
-
-    public void setCorreo(String correo) {
-        this.correo = trim(correo);
-    }
 
     public void setAdminCorreo(String adminCorreo) {
         this.adminCorreo = trim(adminCorreo);
