@@ -7,16 +7,12 @@ export interface ActivationResponse {
 }
 
 export interface PublicClinicRegistrationRequest {
-  ruc: string;
-  razonSocial: string;
   nombre: string;
-  correo: string;
-  telefono: string;
   adminNombres: string;
   adminApellidos: string;
-  adminCedula: string;
   adminCorreo: string;
   password: string;
+  terminosAceptados: boolean;
 }
 
 export interface PublicClinicRegistrationResponse {

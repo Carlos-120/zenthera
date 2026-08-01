@@ -28,14 +28,9 @@ type RegistrationErrorResponse = ApiResponse<never>;
 const backendFieldForMessage = (message: string): FieldPath<PublicClinicRegistrationFormValues> | null => {
   const normalized = message.toLocaleLowerCase('es');
 
-  if (normalized.includes('ruc')) return 'ruc';
-  if (normalized.includes('raz\u00f3n social')) return 'razonSocial';
   if (normalized.includes('nombre de la cl\u00ednica')) return 'nombre';
-  if (normalized.includes('correo de la cl\u00ednica')) return 'correo';
-  if (normalized.includes('tel\u00e9fono')) return 'telefono';
   if (normalized.includes('nombres del administrador')) return 'adminNombres';
   if (normalized.includes('apellidos del administrador')) return 'adminApellidos';
-  if (normalized.includes('c\u00e9dula del administrador')) return 'adminCedula';
   if (normalized.includes('correo del administrador')) return 'adminCorreo';
   if (normalized.includes('contrase\u00f1a')) return 'password';
 
@@ -65,17 +60,13 @@ export default function RegisterClinicForm() {
   } = useForm<PublicClinicRegistrationFormValues>({
     resolver: zodResolver(PublicClinicRegistrationSchema),
     defaultValues: {
-      ruc: '',
-      razonSocial: '',
       nombre: '',
-      correo: '',
-      telefono: '',
       adminNombres: '',
       adminApellidos: '',
-      adminCedula: '',
       adminCorreo: '',
       password: '',
       confirmPassword: '',
+      terminosAceptados: false,
     },
   });
 
@@ -163,7 +154,7 @@ export default function RegisterClinicForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-7" noValidate>
+      <form onSubmit={(e) => { void handleSubmit(onSubmit)(e); }} className="space-y-7" noValidate>
         <section aria-labelledby="clinic-details-heading">
           <div className="mb-5 flex items-center gap-3 border-b border-border/60 pb-4">
             <div className="rounded-lg border border-primary/20 bg-primary/10 p-2 text-primary">
@@ -178,30 +169,10 @@ export default function RegisterClinicForm() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div>
-              <label htmlFor="ruc" className="mb-1 block text-sm font-medium">RUC</label>
-              <input id="ruc" autoComplete="off" {...register('ruc')} aria-invalid={Boolean(errors.ruc)} aria-describedby={errors.ruc ? 'ruc-error' : undefined} className={fieldClassName(Boolean(errors.ruc))} />
-              <FieldError id="ruc-error" message={errors.ruc?.message} />
-            </div>
-            <div>
-              <label htmlFor="razonSocial" className="mb-1 block text-sm font-medium">Razón social</label>
-              <input id="razonSocial" autoComplete="organization" {...register('razonSocial')} aria-invalid={Boolean(errors.razonSocial)} aria-describedby={errors.razonSocial ? 'razonSocial-error' : undefined} className={fieldClassName(Boolean(errors.razonSocial))} />
-              <FieldError id="razonSocial-error" message={errors.razonSocial?.message} />
-            </div>
-            <div>
+            <div className="md:col-span-2">
               <label htmlFor="nombre" className="mb-1 block text-sm font-medium">Nombre de la clínica</label>
               <input id="nombre" autoComplete="organization" {...register('nombre')} aria-invalid={Boolean(errors.nombre)} aria-describedby={errors.nombre ? 'nombre-error' : undefined} className={fieldClassName(Boolean(errors.nombre))} />
               <FieldError id="nombre-error" message={errors.nombre?.message} />
-            </div>
-            <div>
-              <label htmlFor="correo" className="mb-1 block text-sm font-medium">Correo de la clínica</label>
-              <input id="correo" type="email" autoComplete="email" {...register('correo')} aria-invalid={Boolean(errors.correo)} aria-describedby={errors.correo ? 'correo-error' : undefined} className={fieldClassName(Boolean(errors.correo))} />
-              <FieldError id="correo-error" message={errors.correo?.message} />
-            </div>
-            <div className="md:col-span-2">
-              <label htmlFor="telefono" className="mb-1 block text-sm font-medium">Teléfono</label>
-              <input id="telefono" type="tel" autoComplete="tel" {...register('telefono')} aria-invalid={Boolean(errors.telefono)} aria-describedby={errors.telefono ? 'telefono-error' : undefined} className={fieldClassName(Boolean(errors.telefono))} />
-              <FieldError id="telefono-error" message={errors.telefono?.message} />
             </div>
           </div>
         </section>
@@ -231,11 +202,6 @@ export default function RegisterClinicForm() {
               <FieldError id="adminApellidos-error" message={errors.adminApellidos?.message} />
             </div>
             <div>
-              <label htmlFor="adminCedula" className="mb-1 block text-sm font-medium">Cédula del administrador</label>
-              <input id="adminCedula" autoComplete="off" {...register('adminCedula')} aria-invalid={Boolean(errors.adminCedula)} aria-describedby={errors.adminCedula ? 'adminCedula-error' : undefined} className={fieldClassName(Boolean(errors.adminCedula))} />
-              <FieldError id="adminCedula-error" message={errors.adminCedula?.message} />
-            </div>
-            <div>
               <label htmlFor="adminCorreo" className="mb-1 block text-sm font-medium">Correo del administrador</label>
               <input id="adminCorreo" type="email" autoComplete="email" {...register('adminCorreo')} aria-invalid={Boolean(errors.adminCorreo)} aria-describedby={errors.adminCorreo ? 'adminCorreo-error' : undefined} className={fieldClassName(Boolean(errors.adminCorreo))} />
               <FieldError id="adminCorreo-error" message={errors.adminCorreo?.message} />
@@ -262,6 +228,32 @@ export default function RegisterClinicForm() {
             </div>
           </div>
         </section>
+
+        <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 text-sm text-foreground/75">
+          <p>
+            La cuenta registrada será el administrador principal de la clínica.<br />
+            Podrá configurar usuarios, médicos, servicios y permisos después de activar su cuenta.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="flex items-start gap-3" htmlFor="terminosAceptados">
+            <div className="flex h-5 items-center">
+              <input
+                id="terminosAceptados"
+                type="checkbox"
+                {...register('terminosAceptados')}
+                aria-invalid={Boolean(errors.terminosAceptados)}
+                aria-describedby={errors.terminosAceptados ? 'terminosAceptados-error' : undefined}
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+              />
+            </div>
+            <span className="text-sm text-foreground/80">
+              Acepto los términos y condiciones del servicio
+            </span>
+          </label>
+          <FieldError id="terminosAceptados-error" message={errors.terminosAceptados?.message} />
+        </div>
 
         <button
           type="submit"
