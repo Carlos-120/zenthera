@@ -189,6 +189,26 @@ FUNCTIONAL_COMMIT_HASH: e24e146d0b4315b1cfed5025348a2f132ab95a8a
 DOCUMENTATION_COMMIT_CREATED: NO
 PUSH_PERFORMED: NO
 
+### PUBLIC-REGISTRATION-CONTRACT
+STATUS: COMPLETED
+PR: #4
+MERGE_COMMIT: f3f6d4f69856686286e5d8eda3efcbb920653120
+VALIDATION: 114/114 tests PASS
+BUILD: clean verify PASS
+NEXT_TASK: PUBLIC-REGISTRATION-UI
+
+- Exige aceptación explícita de términos.
+- Rechaza `false`, `null` y campo ausente.
+- Registra la fecha de aceptación desde el servidor.
+- Controla la versión de términos desde backend.
+- No permite que el cliente manipule fecha ni versión.
+- Crea la clínica y el usuario `ADMIN_CLINICA` de forma transaccional.
+- Mantiene al usuario inactivo hasta la activación.
+- Crea token de activación únicamente en registros exitosos.
+- No deja clínica, usuario ni token parcial en solicitudes rechazadas.
+- Incorpora la migración `V10__add_public_registration_terms.sql`.
+
+
 ## Historial de slices
 
 | Slice | Estado | Fecha cierre |

@@ -1,10 +1,27 @@
 # CHECKPOINT
 
-FECHA: 2026-07-29
+FECHA: 2026-08-01
 FASE ACTIVA: PUBLIC-UI
-SUBFASE: Foundation pública completada.
+SUBFASE: Contrato de Registro Público
 
-## Último hito cerrado: PUBLIC-UI
+## Último hito cerrado: PUBLIC-REGISTRATION-CONTRACT
+Resultado: COMPLETED
+PR: #4
+MERGE_COMMIT: f3f6d4f69856686286e5d8eda3efcbb920653120
+VALIDATION: 114/114 tests PASS
+BUILD: clean verify PASS
+NEXT_TASK: PUBLIC-REGISTRATION-UI
+
+- develop/zenthera-core está en f3f6d4f69856686286e5d8eda3efcbb920653120.
+- El contrato backend de términos ya está disponible.
+- El frontend todavía no envía `terminosAceptados`.
+- El próximo trabajo debe partir del develop actualizado.
+- El rol debe seguir siendo controlado por backend.
+- No debe añadirse selección de rol en el formulario.
+- `confirmPassword` continúa siendo un campo solo de UI.
+- Los nuevos campos persistentes deben implementarse de extremo a extremo.
+
+## Hito previo cerrado: PUBLIC-UI
 Resultado: IMPLEMENTED: YES, TESTED: YES, INSPECTOR_APPROVED: YES, ATLAS_CLOSED: YES, COMMITTED: YES, PUSHED: NO
 
 FUNCTIONAL_COMMIT:
