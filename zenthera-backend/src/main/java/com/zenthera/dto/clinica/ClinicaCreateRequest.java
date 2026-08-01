@@ -33,4 +33,6 @@ public class ClinicaCreateRequest {
 
     @NotBlank(message = "El correo del administrador es obligatorio")
     private String adminCorreo;
+
+    private Boolean terminosAceptados;
 }

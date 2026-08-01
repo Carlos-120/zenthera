@@ -50,4 +50,13 @@ public class Clinica extends BaseEntity {
 
     @Column(nullable = false)
     private Boolean activa = true;
+
+    @Column(name = "terminos_aceptados")
+    private Boolean terminosAceptados = false;
+
+    @Column(name = "terminos_aceptados_en")
+    private java.time.Instant terminosAceptadosEn;
+
+    @Column(name = "terminos_version", length = 50)
+    private String terminosVersion;
 }
