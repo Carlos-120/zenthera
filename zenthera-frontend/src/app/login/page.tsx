@@ -39,7 +39,11 @@ export default function LoginPage() {
     },
     onSuccess: (data) => {
       setAuth(data.accessToken, data.usuario);
-      router.push('/dashboard');
+      if (data.usuario.rol === 'ADMIN_CLINICA' && data.usuario.onboardingCompletado === false) {
+        router.push('/configuracion-inicial');
+      } else {
+        router.push('/dashboard');
+      }
     },
   });
 

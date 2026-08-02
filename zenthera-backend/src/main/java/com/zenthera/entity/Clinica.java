@@ -59,4 +59,10 @@ public class Clinica extends BaseEntity {
 
     @Column(name = "terminos_version", length = 50)
     private String terminosVersion;
+
+    @Column(name = "onboarding_completado", nullable = false)
+    private Boolean onboardingCompletado = false;
+
+    @Column(name = "onboarding_completado_en")
+    private java.time.Instant onboardingCompletadoEn;
 }

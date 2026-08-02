@@ -49,4 +49,19 @@ public class ClinicaController {
                 .data(response)
                 .build());
     }
+
+    @PutMapping("/onboarding")
+    @PreAuthorize("hasAuthority('ADMIN_CLINICA')")
+    public ResponseEntity<ApiResponse<ClinicaResponse>> completeOnboarding(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody com.zenthera.dto.clinica.ClinicOnboardingRequest request) {
+
+        ClinicaResponse response = clinicaService.completeOnboarding(userDetails.getUsuario().getClinica().getId(), request);
+
+        return ResponseEntity.ok(ApiResponse.<ClinicaResponse>builder()
+                .success(true)
+                .message("Configuración inicial completada")
+                .data(response)
+                .build());
+    }
 }

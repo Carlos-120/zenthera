@@ -181,8 +181,9 @@ public class AuthServiceImpl implements AuthService {
                 .apellidos(usuario.getApellidos())
                 .correo(usuario.getCorreo())
                 .rol(usuario.getRol().getNombre().name())
-                .clinicaId(usuario.getClinica().getId())
-                .clinicaNombre(usuario.getClinica().getNombre())
+                .clinicaId(usuario.getClinica() != null ? usuario.getClinica().getId() : null)
+                .clinicaNombre(usuario.getClinica() != null ? usuario.getClinica().getNombre() : null)
+                .onboardingCompletado(usuario.getClinica() != null ? usuario.getClinica().getOnboardingCompletado() : null)
                 .build();
     }
 }

@@ -20,4 +20,6 @@ public class ClinicaResponse {
     private String zonaHoraria;
     private String logo;
     private Boolean activa;
+    private Boolean onboardingCompletado;
+    private java.time.Instant onboardingCompletadoEn;
 }

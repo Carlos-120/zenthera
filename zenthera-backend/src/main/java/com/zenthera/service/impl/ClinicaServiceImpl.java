@@ -155,6 +155,38 @@ public class ClinicaServiceImpl implements ClinicaService {
 
     @Override
     @Transactional
+    public ClinicaResponse completeOnboarding(Long clinicaId, com.zenthera.dto.clinica.ClinicOnboardingRequest request) {
+        Clinica clinica = clinicaRepository.findById(clinicaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Clínica no encontrada"));
+
+        clinicaRepository.findByRuc(request.getRuc()).ifPresent(existing -> {
+            if (!existing.getId().equals(clinica.getId())) {
+                throw new BusinessRuleException("No se puede completar el registro con los datos proporcionados.", HttpStatus.CONFLICT);
+            }
+        });
+
+        String normalizedEmail = request.getCorreo().trim().toLowerCase(Locale.ROOT);
+        clinicaRepository.findByCorreoNormalized(normalizedEmail).ifPresent(existing -> {
+            if (!existing.getId().equals(clinica.getId())) {
+                throw new BusinessRuleException("No se puede completar el registro con los datos proporcionados.", HttpStatus.CONFLICT);
+            }
+        });
+
+        clinica.setRuc(request.getRuc());
+        clinica.setRazonSocial(request.getRazonSocial());
+        clinica.setCorreo(request.getCorreo());
+        clinica.setTelefono(request.getTelefono());
+        clinica.setDireccion(request.getDireccion());
+        clinica.setCiudad(request.getCiudad());
+        clinica.setProvincia(request.getProvincia());
+        clinica.setOnboardingCompletado(true);
+        clinica.setOnboardingCompletadoEn(Instant.now());
+
+        return ClinicaMapper.toResponse(clinicaRepository.save(clinica));
+    }
+
+    @Override
+    @Transactional
     public ClinicaResponse createClinica(ClinicaCreateRequest request) {
         if (clinicaRepository.findByRuc(request.getRuc()).isPresent()) {
             throw new IllegalArgumentException("El RUC ya está registrado");

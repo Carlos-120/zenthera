@@ -21,7 +21,7 @@ describe('authStore', () => {
       correo: 'juan@test.com',
       rol: 'ROLE_MEDICO',
       clinicaId: 10,
-      clinicaNombre: 'Clínica Central'
+      clinicaNombre: 'Clínica Central', onboardingCompletado: true
     };
 
     useAuthStore.getState().setAuth('test-token', testUser);
@@ -34,7 +34,7 @@ describe('authStore', () => {
 
   it('debe limpiar el estado cuando se cierra sesión', () => {
     useAuthStore.getState().setAuth('test-token', {
-      id: 1, nombres: 'A', apellidos: 'B', correo: 'a@b.com', rol: 'ADMIN', clinicaId: 1, clinicaNombre: 'Test'
+      id: 1, nombres: 'A', apellidos: 'B', correo: 'a@b.com', rol: 'ADMIN', clinicaId: 1, clinicaNombre: 'Test', onboardingCompletado: true
     });
 
     useAuthStore.getState().clearAuth();

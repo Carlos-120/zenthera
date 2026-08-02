@@ -16,5 +16,6 @@ public class MeResponse {
     private String rol;
     private Long clinicaId;
     private String clinicaNombre;
+    private Boolean onboardingCompletado;
 
 }

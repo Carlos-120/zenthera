@@ -135,7 +135,7 @@ describe('AuthProvider Integration', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('redirects an authenticated login user to dashboard', async () => {
+  it('redirects an authenticated login user to dashboard (onboarding complete)', async () => {
     vi.mocked(usePathname).mockReturnValue('/login');
     vi.mocked(apiClient.post).mockResolvedValue({ data: { data: { accessToken: 'token' } } });
     vi.mocked(apiClient.get).mockResolvedValue({ data: { data: mockUser } });
@@ -166,6 +166,79 @@ describe('AuthProvider Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('activate-content')).toBeInTheDocument();
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+  it('redirects ADMIN_CLINICA with incomplete onboarding to configuracion-inicial', async () => {
+    vi.mocked(usePathname).mockReturnValue('/dashboard');
+    const incompleteUser = { ...mockUser, onboardingCompletado: false };
+    vi.mocked(apiClient.post).mockResolvedValue({ data: { data: { accessToken: 'token' } } });
+    vi.mocked(apiClient.get).mockResolvedValue({ data: { data: incompleteUser } });
+    useAuthStore.getState().setAuth('token', incompleteUser);
+
+    render(
+      <AuthProvider>
+        <div data-testid="protected-content">Protected content</div>
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/configuracion-inicial');
+    });
+  });
+
+  it('keeps ADMIN_CLINICA with incomplete onboarding on configuracion-inicial', async () => {
+    vi.mocked(usePathname).mockReturnValue('/configuracion-inicial');
+    const incompleteUser = { ...mockUser, onboardingCompletado: false };
+    vi.mocked(apiClient.post).mockResolvedValue({ data: { data: { accessToken: 'token' } } });
+    vi.mocked(apiClient.get).mockResolvedValue({ data: { data: incompleteUser } });
+    useAuthStore.getState().setAuth('token', incompleteUser);
+
+    render(
+      <AuthProvider>
+        <div data-testid="onboarding-content">Onboarding content</div>
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('onboarding-content')).toBeInTheDocument();
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('redirects ADMIN_CLINICA with complete onboarding from configuracion-inicial to dashboard', async () => {
+    vi.mocked(usePathname).mockReturnValue('/configuracion-inicial');
+    const completeUser = { ...mockUser, onboardingCompletado: true };
+    vi.mocked(apiClient.post).mockResolvedValue({ data: { data: { accessToken: 'token' } } });
+    vi.mocked(apiClient.get).mockResolvedValue({ data: { data: completeUser } });
+    useAuthStore.getState().setAuth('token', completeUser);
+
+    render(
+      <AuthProvider>
+        <div data-testid="onboarding-content">Onboarding content</div>
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/dashboard');
+    });
+  });
+
+  it('does not redirect SUPER_ADMIN without clinica to onboarding', async () => {
+    vi.mocked(usePathname).mockReturnValue('/dashboard');
+    const superAdmin = { ...mockUser, rol: 'SUPER_ADMIN', onboardingCompletado: null };
+    vi.mocked(apiClient.post).mockResolvedValue({ data: { data: { accessToken: 'token' } } });
+    vi.mocked(apiClient.get).mockResolvedValue({ data: { data: superAdmin } });
+    useAuthStore.getState().setAuth('token', superAdmin);
+
+    render(
+      <AuthProvider>
+        <div data-testid="protected-content">Protected content</div>
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('protected-content')).toBeInTheDocument();
     });
     expect(mockPush).not.toHaveBeenCalled();
   });

@@ -1,0 +1,2 @@
+ALTER TABLE clinicas ADD COLUMN onboarding_completado BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE clinicas ADD COLUMN onboarding_completado_en TIMESTAMP WITH TIME ZONE NULL;

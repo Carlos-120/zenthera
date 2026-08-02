@@ -16,6 +16,7 @@ public interface ClinicaService {
 
     ClinicaResponse getMiClinica(Long clinicaId);
     ClinicaResponse updateMiClinica(Long clinicaId, ClinicaUpdateRequest request);
+    ClinicaResponse completeOnboarding(Long clinicaId, com.zenthera.dto.clinica.ClinicOnboardingRequest request);
 
     // Para SUPER_ADMIN
     ClinicaResponse createClinica(ClinicaCreateRequest request);

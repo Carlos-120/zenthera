@@ -8,6 +8,7 @@ export interface UserProfile {
   rol: string;
   clinicaId: number;
   clinicaNombre: string;
+  onboardingCompletado: boolean | null;
   foto?: string | null;
 }
 

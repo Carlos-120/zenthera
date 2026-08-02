@@ -13,6 +13,7 @@ let initPromise: Promise<void> | null = null;
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isInitializing, setIsInitializing] = useState(true);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const usuario = useAuthStore((state) => state.usuario);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const setAuth = useAuthStore((state) => state.setAuth);
   const pathname = usePathname();
@@ -50,11 +51,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isInitializing) {
       if (!isAuthenticated && !PUBLIC_ROUTES.includes(pathname)) {
         router.push('/login');
-      } else if (isAuthenticated && GUEST_ONLY_ROUTES.includes(pathname)) {
-        router.push('/dashboard');
+      } else if (isAuthenticated) {
+        const needsOnboarding = usuario?.rol === 'ADMIN_CLINICA' && usuario?.onboardingCompletado === false;
+        if (needsOnboarding && pathname !== '/configuracion-inicial') {
+          router.push('/configuracion-inicial');
+        } else if (!needsOnboarding && pathname === '/configuracion-inicial') {
+          router.push('/dashboard');
+        } else if (GUEST_ONLY_ROUTES.includes(pathname)) {
+          router.push(needsOnboarding ? '/configuracion-inicial' : '/dashboard');
+        }
       }
     }
-  }, [isInitializing, isAuthenticated, pathname, router]);
+  }, [isInitializing, isAuthenticated, usuario, pathname, router]);
 
   if (isInitializing) {
     return (
