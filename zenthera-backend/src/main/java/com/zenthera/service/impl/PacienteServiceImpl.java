@@ -64,10 +64,21 @@ public class PacienteServiceImpl implements PacienteService {
     }
 
     @Override
-    public PageResponse<PacienteListResponse> listar(int page, int size) {
+    public PageResponse<PacienteListResponse> listar(int page, int size, String search, Boolean activo, String sort, String direction) {
         Long tenantId = TenantContext.getCurrentTenant();
+
+        List<String> allowedSortFields = List.of("id", "cedula", "nombres", "apellidos", "createdAt", "updatedAt");
+        String validSort = (sort != null && allowedSortFields.contains(sort)) ? sort : "createdAt";
+
+        org.springframework.data.domain.Sort sortObj = org.springframework.data.domain.Sort.by(
+                "desc".equalsIgnoreCase(direction) ? org.springframework.data.domain.Sort.Direction.DESC : org.springframework.data.domain.Sort.Direction.ASC,
+                validSort
+        );
+
+        PageRequest pageRequest = PageRequest.of(page, size, sortObj);
+
         Page<PacienteListResponse> pacientes = pacienteRepository
-                .findByClinicaIdAndActivoTrue(tenantId, PageRequest.of(page, size))
+                .findByClinicaIdWithFilters(tenantId, search, activo, pageRequest)
                 .map(pacienteMapper::toListResponse);
 
         return PageResponseMapper.from(pacientes);
@@ -104,6 +115,18 @@ public class PacienteServiceImpl implements PacienteService {
 
         Paciente actualizado = pacienteRepository.save(paciente);
 
+        return pacienteMapper.toResponse(actualizado);
+    }
+
+    @Override
+    public PacienteResponse actualizarEstado(Long id, Boolean activo) {
+        Long tenantId = TenantContext.getCurrentTenant();
+        Paciente paciente = pacienteRepository.findByIdAndClinicaId(id, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado o pertenece a otra clínica"));
+
+        paciente.setActivo(activo);
+
+        Paciente actualizado = pacienteRepository.save(paciente);
         return pacienteMapper.toResponse(actualizado);
     }
 

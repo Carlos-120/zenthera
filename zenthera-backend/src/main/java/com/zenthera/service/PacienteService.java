@@ -17,9 +17,11 @@ public interface PacienteService {
 
     List<PacienteListResponse> listar();
 
-    PageResponse<PacienteListResponse> listar(int page, int size);
+    PageResponse<PacienteListResponse> listar(int page, int size, String search, Boolean activo, String sort, String direction);
 
     PacienteResponse actualizar(Long id, PacienteRequest request);
+
+    PacienteResponse actualizarEstado(Long id, Boolean activo);
 
     void eliminar(Long id);
 

@@ -11,8 +11,6 @@ import java.time.LocalDate;
 @Setter
 public class PacienteRequest {
 
-    @NotNull(message = "La clínica es obligatoria")
-    private Long clinicaId;
 
     @NotBlank(message = "La cédula es obligatoria")
     @Size(max = 13)

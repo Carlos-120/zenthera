@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPacientes, updateEstadoPaciente } from '@/lib/api/pacientes';
-import { Users, Search, AlertCircle, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Filter, ArrowUpDown, Plus, UserSquare2, Power, PowerOff } from 'lucide-react';
+import { Search, AlertCircle, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Filter, ArrowUpDown, Plus, UserSquare2, Power, PowerOff } from 'lucide-react';
 import Link from 'next/link';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 import { useAuthStore } from '@/store/authStore';
@@ -24,17 +24,27 @@ export default function PacientesPage() {
   const [activoFiltro, setActivoFiltro] = useState<boolean | undefined>(undefined);
   const [sortField, setSortField] = useState<string>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const sortParam = `${sortField},${sortDirection}`;
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (sessionStorage.getItem('paciente_creado') === 'true') {
+        setTimeout(() => setShowSuccess(true), 0);
+        sessionStorage.removeItem('paciente_creado');
+        setTimeout(() => setShowSuccess(false), 5000);
+      }
+    }
+  }, []);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['pacientes', page, size, searchTerm, activoFiltro, sortParam],
+    queryKey: ['pacientes', page, size, searchTerm, activoFiltro, sortField, sortDirection],
     queryFn: () => getPacientes({
       page,
       size,
       search: searchTerm || undefined,
       activo: activoFiltro,
-      sort: sortParam
+      sort: sortField,
+      direction: sortDirection
     }),
     placeholderData: (prev) => prev,
   });
@@ -64,15 +74,24 @@ export default function PacientesPage() {
     setPage(0);
   };
 
-  const calculateAge = (birthDateString: string) => {
-    const today = new Date();
+  const calculateAge = (birthDateString: string | null | undefined) => {
+    if (!birthDateString) return '—';
     const birthDate = new Date(birthDateString);
+    if (isNaN(birthDate.getTime())) return '—';
+    const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
     return age;
+  };
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
   const estadoMutation = useMutation({
@@ -82,8 +101,9 @@ export default function PacientesPage() {
       setModalPaciente(null);
       setEstadoError(null);
     },
-    onError: (error: any) => {
-      setEstadoError(error.response?.data?.message || 'Ocurrió un error al cambiar el estado.');
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      setEstadoError(err.response?.data?.message || 'Ocurrió un error al cambiar el estado.');
     }
   });
 
@@ -104,6 +124,15 @@ export default function PacientesPage() {
   return (
     <RoleGuard allowedRoles={['ADMIN_CLINICA', 'MEDICO', 'RECEPCIONISTA']}>
       <div className="space-y-6 max-w-7xl mx-auto pb-10">
+        {showSuccess && (
+          <div className="mb-6 p-4 rounded-xl bg-success/10 border border-success/20 text-success flex items-start gap-3">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium">Paciente registrado correctamente</h3>
+              <p className="text-sm opacity-90">El paciente se ha agregado a la lista.</p>
+            </div>
+          </div>
+        )}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight mb-1 flex items-center gap-2">
@@ -273,7 +302,7 @@ export default function PacientesPage() {
                         </div>
                       </td>
                       <td className="py-4 px-6 text-sm text-foreground/80">
-                        {calculateAge(paciente.fechaNacimiento)} años
+                        {calculateAge(paciente.fechaNacimiento) === '—' ? '—' : `${calculateAge(paciente.fechaNacimiento)} años`}
                       </td>
                       <td className="py-4 px-6">
                         <p className="text-sm text-foreground/80">{paciente.correo || 'Sin correo'}</p>
@@ -293,7 +322,7 @@ export default function PacientesPage() {
                         )}
                       </td>
                       <td className="py-4 px-6 text-right text-sm text-foreground/60">
-                        {new Date(paciente.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {formatDate(paciente.createdAt)}
                       </td>
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-2">

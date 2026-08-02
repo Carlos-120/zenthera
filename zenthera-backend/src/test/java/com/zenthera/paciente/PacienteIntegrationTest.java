@@ -1,0 +1,265 @@
+package com.zenthera.paciente;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zenthera.dto.paciente.EstadoPacienteRequest;
+import com.zenthera.entity.Clinica;
+import com.zenthera.entity.Paciente;
+import com.zenthera.entity.Usuario;
+import com.zenthera.entity.Rol;
+import com.zenthera.enums.RolNombre;
+import com.zenthera.enums.Sexo;
+import com.zenthera.repository.RolRepository;
+import com.zenthera.repository.ClinicaRepository;
+import com.zenthera.repository.PacienteRepository;
+import com.zenthera.repository.UsuarioRepository;
+import com.zenthera.repository.CitaRepository;
+import com.zenthera.repository.ActivationTokenRepository;
+import com.zenthera.repository.MedicoRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("e2e")
+public class PacienteIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ClinicaRepository clinicaRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private RolRepository rolRepository;
+
+    @Autowired
+    private PacienteRepository pacienteRepository;
+
+    @Autowired
+    private CitaRepository citaRepository;
+
+    @Autowired
+    private ActivationTokenRepository activationTokenRepository;
+
+    @Autowired
+    private MedicoRepository medicoRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private String adminToken;
+    private String superAdminToken;
+    private Long clinicaId;
+    private Long pacienteId;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        citaRepository.deleteAll();
+        activationTokenRepository.deleteAll();
+        pacienteRepository.deleteAll();
+        usuarioRepository.deleteAll();
+        medicoRepository.deleteAll();
+        clinicaRepository.deleteAll();
+
+        // 1. Crear clínica
+        Clinica clinica = new Clinica();
+        clinica.setNombre("Clinica Pacientes");
+        clinica.setRuc("0999999999001");
+        clinica.setCorreo("contacto@clinica.com");
+        clinica.setTelefono("0999999999");
+        clinica.setDireccion("Direccion");
+        clinica.setActiva(true);
+        clinica.setOnboardingCompletado(false);
+        clinica = clinicaRepository.save(clinica);
+        clinicaId = clinica.getId();
+
+        // 2. Crear admin
+        Usuario admin = new Usuario();
+        admin.setNombres("Admin");
+        admin.setApellidos("Clinica");
+        admin.setCorreo("admin@clinica.com");
+        admin.setPassword(passwordEncoder.encode("Password123!"));
+        Rol rol = rolRepository.findByNombre(RolNombre.ADMIN_CLINICA).orElseGet(() -> {
+            Rol r = new Rol();
+            r.setNombre(RolNombre.ADMIN_CLINICA);
+            return rolRepository.save(r);
+        });
+        admin.setRol(rol);
+        admin.setActivo(true);
+        admin.setBloqueado(false);
+        admin.setClinica(clinica);
+        usuarioRepository.save(admin);
+
+        // 3. Crear Paciente
+        Paciente paciente = new Paciente();
+        paciente.setCedula("1234567890");
+        paciente.setNombres("Juan");
+        paciente.setApellidos("Perez");
+        paciente.setSexo(Sexo.MASCULINO);
+        paciente.setFechaNacimiento(LocalDate.parse("1990-01-01"));
+        paciente.setActivo(true);
+        paciente.setClinica(clinica);
+        paciente = pacienteRepository.save(paciente);
+        pacienteId = paciente.getId();
+
+        // 4. Obtener Token
+        String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "correo": "admin@clinica.com",
+                          "password": "Password123!"
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        adminToken = objectMapper.readTree(loginResponse).path("data").path("accessToken").asText();
+
+        // 5. Crear SUPER_ADMIN
+        Usuario superAdmin = new Usuario();
+        superAdmin.setNombres("Super");
+        superAdmin.setApellidos("Admin");
+        superAdmin.setCorreo("super@admin.com");
+        superAdmin.setPassword(passwordEncoder.encode("Password123!"));
+        Rol rolSuper = rolRepository.findByNombre(RolNombre.SUPER_ADMIN).orElseGet(() -> {
+            Rol r = new Rol();
+            r.setNombre(RolNombre.SUPER_ADMIN);
+            return rolRepository.save(r);
+        });
+        superAdmin.setRol(rolSuper);
+        superAdmin.setActivo(true);
+        superAdmin.setBloqueado(false);
+        usuarioRepository.save(superAdmin);
+
+        // 6. Obtener Token SUPER_ADMIN
+        String loginResponseSuper = mockMvc.perform(post("/api/v1/auth/login")
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "correo": "super@admin.com",
+                          "password": "Password123!"
+                        }
+                        """))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        superAdminToken = objectMapper.readTree(loginResponseSuper).path("data").path("accessToken").asText();
+    }
+
+    @AfterEach
+    void tearDown() {
+        citaRepository.deleteAll();
+        activationTokenRepository.deleteAll();
+        pacienteRepository.deleteAll();
+        usuarioRepository.deleteAll();
+        medicoRepository.deleteAll();
+        clinicaRepository.deleteAll();
+    }
+
+    @Test
+    void testListarPaginadoYFiltrado() throws Exception {
+        mockMvc.perform(get("/api/pacientes/paginado")
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .header("Authorization", "Bearer " + adminToken)
+                .param("page", "0")
+                .param("size", "10")
+                .param("search", "Juan")
+                .param("activo", "true")
+                .param("sort", "nombres")
+                .param("direction", "asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].nombres", is("Juan")));
+    }
+
+    @Test
+    void testActualizarEstado() throws Exception {
+        EstadoPacienteRequest request = new EstadoPacienteRequest(false);
+        
+        mockMvc.perform(patch("/api/pacientes/" + pacienteId + "/estado")
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.activo", is(false)));
+
+        // Verificar con listarPaginado que ya no sale con activo=true
+        mockMvc.perform(get("/api/pacientes/paginado")
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .header("Authorization", "Bearer " + adminToken)
+                .param("page", "0")
+                .param("size", "10")
+                .param("activo", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content", hasSize(0)));
+    }
+
+    @Test
+    void testCrearPacienteExitosoSinClinicaId() throws Exception {
+        mockMvc.perform(post("/api/pacientes")
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "cedula": "0998877665",
+                          "nombres": "Nuevo",
+                          "apellidos": "Paciente",
+                          "fechaNacimiento": "2000-01-01",
+                          "sexo": "MASCULINO"
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.nombres", is("Nuevo")));
+    }
+
+    @Test
+    void testCrearPacienteSuperAdminFalla() throws Exception {
+        mockMvc.perform(post("/api/pacientes")
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .header("Authorization", "Bearer " + superAdminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "cedula": "0998877665",
+                          "nombres": "Nuevo",
+                          "apellidos": "Paciente",
+                          "fechaNacimiento": "2000-01-01",
+                          "sexo": "MASCULINO"
+                        }
+                        """))
+                .andExpect(status().isForbidden()); // O un error 4xx/5xx controlado
+    }
+}

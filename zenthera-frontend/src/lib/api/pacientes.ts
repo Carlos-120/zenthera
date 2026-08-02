@@ -20,25 +20,29 @@ export interface PacienteResponse {
   updatedAt: string;
 }
 
-export interface PacienteListResponse extends PacienteResponse {}
-
 export interface GetPacientesParams {
   page?: number;
   size?: number;
   search?: string;
   activo?: boolean;
   sort?: string;
+  direction?: string;
 }
 
-export const getPacientes = async (params: GetPacientesParams): Promise<ApiResponse<PageResponse<PacienteListResponse>>> => {
+export const getPacientes = async (params: GetPacientesParams): Promise<ApiResponse<PageResponse<PacienteResponse>>> => {
   const cleanParams = Object.fromEntries(
-    Object.entries(params).filter(([_, v]) => v !== undefined && v !== '')
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== '')
   );
 
-  const response = await apiClient.get<ApiResponse<PageResponse<PacienteListResponse>>>('/api/pacientes/paginado', {
-    params: cleanParams
-  });
-  return response.data;
+  try {
+    const response = await apiClient.get<ApiResponse<PageResponse<PacienteResponse>>>('/api/pacientes/paginado', {
+      params: cleanParams
+    });
+    return response.data;
+  } catch (error) {
+    const err = error as { response?: { data?: { message?: string } } };
+    throw new Error(err.response?.data?.message || 'Error al obtener pacientes');
+  }
 };
 
 export const getPacienteById = async (id: number): Promise<ApiResponse<PacienteResponse>> => {
@@ -50,17 +54,17 @@ export interface EstadoPacienteRequest {
   activo: boolean;
 }
 
-export const createPaciente = async (data: any): Promise<ApiResponse<PacienteResponse>> => {
-  const response = await apiClient.post<ApiResponse<PacienteResponse>>('/api/v1/clinica/pacientes', data);
+export const createPaciente = async (data: unknown): Promise<ApiResponse<PacienteResponse>> => {
+  const response = await apiClient.post<ApiResponse<PacienteResponse>>('/api/pacientes', data);
   return response.data;
 };
 
-export const updatePaciente = async (id: number, data: any): Promise<ApiResponse<PacienteResponse>> => {
-  const response = await apiClient.put<ApiResponse<PacienteResponse>>(`/api/v1/clinica/pacientes/${id}`, data);
+export const updatePaciente = async (id: number, data: unknown): Promise<ApiResponse<PacienteResponse>> => {
+  const response = await apiClient.put<ApiResponse<PacienteResponse>>(`/api/pacientes/${id}`, data);
   return response.data;
 };
 
 export const updateEstadoPaciente = async (id: number, data: EstadoPacienteRequest): Promise<ApiResponse<PacienteResponse>> => {
-  const response = await apiClient.patch<ApiResponse<PacienteResponse>>(`/api/v1/clinica/pacientes/${id}/estado`, data);
+  const response = await apiClient.patch<ApiResponse<PacienteResponse>>(`/api/pacientes/${id}/estado`, data);
   return response.data;
 };
