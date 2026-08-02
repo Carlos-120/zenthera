@@ -67,8 +67,8 @@ describe('DashboardLayout', () => {
     useAuthStore.getState().setAuth('token', mockAdminClinica);
     renderWithProviders(<DashboardLayout><div>Test</div></DashboardLayout>);
 
-    expect(screen.getByText('Mi Clínica')).toBeInTheDocument();
-    expect(screen.getByText('Inicio')).toBeInTheDocument();
+    expect(screen.getByText('Configuración')).toBeInTheDocument();
+    expect(screen.getByText('Panel de Control')).toBeInTheDocument();
     expect(screen.queryByText('Gestión de Clínicas')).not.toBeInTheDocument();
   });
 
@@ -76,8 +76,8 @@ describe('DashboardLayout', () => {
     useAuthStore.getState().setAuth('token', mockSuperAdmin);
     renderWithProviders(<DashboardLayout><div>Test</div></DashboardLayout>);
 
-    expect(screen.queryByText('Mi Clínica')).not.toBeInTheDocument();
-    expect(screen.getByText('Inicio')).toBeInTheDocument();
+    expect(screen.queryByText('Configuración')).not.toBeInTheDocument();
+    expect(screen.getByText('Panel de Control')).toBeInTheDocument();
     expect(screen.getByText('Gestión de Clínicas')).toBeInTheDocument();
   });
 
@@ -137,16 +137,16 @@ describe('DashboardLayout', () => {
     const menuButtons = screen.getAllByRole('button').filter(b => b.querySelector('.lucide-menu'));
     expect(menuButtons.length).toBeGreaterThan(0);
 
-    // Identificar el link 'Mi Clínica' y 'Inicio' (1 de cada uno normalmente en desktop, pero al abrir móvil aparecen más)
+    // Identificar el link 'Configuración' y 'Panel de Control' (1 de cada uno normalmente en desktop, pero al abrir móvil aparecen más)
     // Al principio, sólo están los del aside (que tienen clase hidden md:flex)
     // La prueba real RTL no procesa CSS `hidden`, por lo que verá los links del aside.
     // Al abrir el modal, se añaden los links en el modal.
-    const initialLinksCount = screen.getAllByText('Mi Clínica').length;
+    const initialLinksCount = screen.getAllByText('Configuración').length;
 
     fireEvent.click(menuButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Mi Clínica').length).toBeGreaterThan(initialLinksCount);
+      expect(screen.getAllByText('Configuración').length).toBeGreaterThan(initialLinksCount);
     });
   });
 });
