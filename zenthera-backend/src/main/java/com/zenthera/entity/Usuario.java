@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class Usuario extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "clinica_id", nullable = false)
+    @JoinColumn(name = "clinica_id", nullable = true)
     private Clinica clinica;
 
     @ManyToOne(fetch = FetchType.LAZY)

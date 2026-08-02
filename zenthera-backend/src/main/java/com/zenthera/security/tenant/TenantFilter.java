@@ -23,8 +23,10 @@ public class TenantFilter extends OncePerRequestFilter {
 
         if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails) {
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            Long clinicaId = userDetails.getUsuario().getClinica().getId();
-            TenantContext.setCurrentTenant(clinicaId);
+            if (userDetails.getUsuario().getClinica() != null) {
+                Long clinicaId = userDetails.getUsuario().getClinica().getId();
+                TenantContext.setCurrentTenant(clinicaId);
+            }
         }
 
         try {
