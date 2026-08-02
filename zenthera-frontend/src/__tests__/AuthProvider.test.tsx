@@ -28,6 +28,7 @@ describe('AuthProvider Integration', () => {
     rol: 'ADMIN_CLINICA',
     clinicaId: 1,
     clinicaNombre: 'Mi Clinica',
+    onboardingCompletado: true,
   };
 
   beforeEach(() => {

@@ -292,25 +292,13 @@ public class ClinicaServiceImpl implements ClinicaService {
         admin.setCorreo(adminCorreo);
 
         admin.setPassword(passwordEncoder.encode(request.getPassword()));
-        admin.setCambiarPassword(true);
-        admin.setActivo(false); // Inactivo hasta que active su cuenta
+        admin.setCambiarPassword(false);
+        admin.setActivo(true); // Activo inmediatamente (MVP)
         admin.setBloqueado(false);
 
         admin = usuarioRepository.save(admin);
 
-        // Generar token opaco
-        String token = generateActivationToken();
-        String tokenHash = HashUtil.sha256(token);
-
-        ActivationToken activationToken = new ActivationToken();
-        activationToken.setUsuario(admin);
-        activationToken.setTokenHash(tokenHash);
-        activationToken.setExpiresAt(Instant.now().plus(24, ChronoUnit.HOURS));
-        activationTokenRepository.save(activationToken);
-
-        eventPublisher.publishEvent(new ActivationNotificationEvent(admin.getCorreo(), token));
-
-        return new PublicClinicRegistrationResponse(adminCorreo, "PENDIENTE_ACTIVACION");
+        return new PublicClinicRegistrationResponse(adminCorreo, "ACTIVADA");
     }
 
     private String normalizeEmail(String email) {

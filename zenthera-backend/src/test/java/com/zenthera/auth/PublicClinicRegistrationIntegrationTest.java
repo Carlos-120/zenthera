@@ -79,14 +79,14 @@ class PublicClinicRegistrationIntegrationTest {
     }
 
     @Test
-    void registerClinic_createsPendingAdminWithSafeResponseAndActivationToken() throws Exception {
+    void registerClinic_createsActiveAdminWithSafeResponse() throws Exception {
         PublicClinicRegistrationRequest request = validRequest("admin@registro.test");
 
         mockMvc.perform(register(request))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.adminCorreo").value("admin@registro.test"))
-                .andExpect(jsonPath("$.data.estado").value("PENDIENTE_ACTIVACION"))
+                .andExpect(jsonPath("$.data.estado").value("ACTIVADA"))
                 .andExpect(jsonPath("$.data.password").doesNotExist())
                 .andExpect(jsonPath("$.data.accessToken").doesNotExist());
 
@@ -100,39 +100,23 @@ class PublicClinicRegistrationIntegrationTest {
         assertTrue(clinica.getTerminosAceptados());
         assertNotNull(clinica.getTerminosAceptadosEn());
         assertEquals(com.zenthera.service.impl.ClinicaServiceImpl.CURRENT_TERMS_VERSION, clinica.getTerminosVersion());
-        assertTrue(notificationService.getTokenForEmail("admin@registro.test").isPresent());
+        assertTrue(notificationService.getTokenForEmail("admin@registro.test").isEmpty());
         assertEquals(clinica.getId(), admin.getClinica().getId());
-        assertFalse(admin.getActivo());
-        assertTrue(admin.getCambiarPassword());
+        assertTrue(admin.getActivo());
+        assertFalse(admin.getCambiarPassword());
         assertTrue(passwordEncoder.matches("RegistroSeguro123!", admin.getPassword()));
         assertNotEquals("RegistroSeguro123!", admin.getPassword());
-        assertEquals(1, activationTokenRepository.count());
+        assertEquals(0, activationTokenRepository.count());
     }
 
     @Test
-    void registerClinic_blocksLoginUntilActivationThenAllowsLogin() throws Exception {
+    void registerClinic_allowsLoginImmediately() throws Exception {
         PublicClinicRegistrationRequest request = validRequest("admin.activar@test.com");
         mockMvc.perform(register(request)).andExpect(status().isCreated());
 
         LoginRequest login = new LoginRequest();
         login.setCorreo("admin.activar@test.com");
         login.setPassword("RegistroSeguro123!");
-        mockMvc.perform(post("/api/v1/auth/login").header("Origin", "http://localhost:3000")
-                        .header("X-Requested-With", "XMLHttpRequest").contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(login)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.message").value("Credenciales inválidas"))
-                .andExpect(jsonPath("$.data").doesNotExist());
-
-        ActivationRequest activation = new ActivationRequest();
-        activation.setToken(notificationService.getTokenForEmail("admin.activar@test.com").orElseThrow());
-        activation.setPassword("ActivadaSeguro123!");
-        mockMvc.perform(post("/api/v1/auth/activate").header("Origin", "http://localhost:3000")
-                        .header("X-Requested-With", "XMLHttpRequest").contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(activation)))
-                .andExpect(status().isOk());
-
-        login.setPassword("ActivadaSeguro123!");
         mockMvc.perform(post("/api/v1/auth/login").header("Origin", "http://localhost:3000")
                         .header("X-Requested-With", "XMLHttpRequest").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(login)))
@@ -199,25 +183,13 @@ class PublicClinicRegistrationIntegrationTest {
         assertNotEquals(RolNombre.SUPER_ADMIN,
                 rolRepository.findById(admin.getRol().getId()).orElseThrow().getNombre());
         assertTrue(clinica.getActiva());
-        assertFalse(admin.getActivo());
-        assertTrue(admin.getCambiarPassword());
+        assertTrue(admin.getActivo());
+        assertFalse(admin.getCambiarPassword());
         assertEquals(clinica.getId(), admin.getClinica().getId());
         assertNotEquals(999L, admin.getClinica().getId());
     }
 
-    @Test
-    void registerClinic_rollsBackWhenActivationTokenPersistenceFails() throws Exception {
-        doThrow(new DataIntegrityViolationException("activation token persistence failed"))
-                .when(activationTokenRepository).save(any(ActivationToken.class));
 
-        mockMvc.perform(register(validRequest("admin.activation.rollback@test.com")))
-                .andExpect(status().isConflict());
-
-        assertTrue(clinicaRepository.findAll().isEmpty());
-        assertTrue(usuarioRepository.findByCorreo("admin.activation.rollback@test.com").isEmpty());
-        assertEquals(0, activationTokenRepository.count());
-        assertTrue(notificationService.getTokenForEmail("admin.activation.rollback@test.com").isEmpty());
-    }
 
     @Test
     void registerClinic_rollsBackWhenAdministratorPersistenceFails() throws Exception {
@@ -246,36 +218,7 @@ class PublicClinicRegistrationIntegrationTest {
         assertTrue(notificationService.getTokenForEmail("admin.role.rollback@test.com").isEmpty());
     }
 
-    @Test
-    void activationNotificationListenerDoesNotRunWhenTransactionRollsBack() {
-        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
-            eventPublisher.publishEvent(new ActivationNotificationEvent("rollback.listener@test.com", "opaque-test-token"));
-            status.setRollbackOnly();
-        });
 
-        assertTrue(notificationService.getTokenForEmail("rollback.listener@test.com").isEmpty());
-    }
-
-    @Test
-    void activationNotificationListenerRunsAfterSuccessfulCommit() {
-        new TransactionTemplate(transactionManager).executeWithoutResult(status ->
-                eventPublisher.publishEvent(new ActivationNotificationEvent("after.commit@test.com", "opaque-test-token")));
-
-        assertTrue(notificationService.getTokenForEmail("after.commit@test.com").isPresent());
-    }
-
-    @Test
-    void registerClinicPersistsDataWhenNotificationFailsAfterCommit() throws Exception {
-        doThrow(new IllegalStateException("notification failure"))
-                .when(notificationServiceSpy).sendActivationToken(anyString(), anyString());
-
-        mockMvc.perform(register(validRequest("admin.notification.rollback@test.com")))
-                .andExpect(status().isCreated());
-
-        assertFalse(clinicaRepository.findAll().isEmpty());
-        assertTrue(usuarioRepository.findByCorreo("admin.notification.rollback@test.com").isPresent());
-        assertEquals(1, activationTokenRepository.count());
-    }
 
     @Test
     void registerClinic_rejectsWhenTermsAreFalse() throws Exception {
