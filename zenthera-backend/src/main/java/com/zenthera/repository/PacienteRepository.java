@@ -38,6 +38,23 @@ public interface PacienteRepository extends JpaRepository<Paciente, Long> {
                   )
             """)
     List<Paciente> buscarPacientesPorClinica(@Param("clinicaId") Long clinicaId, @Param("buscar") String buscar);
+    @Query("""
+                SELECT p
+                FROM Paciente p
+                WHERE p.clinica.id = :clinicaId
+                  AND (:activo IS NULL OR p.activo = :activo)
+                  AND (:buscar IS NULL OR :buscar = '' OR
+                        LOWER(p.cedula) LIKE LOWER(CONCAT('%', :buscar, '%'))
+                     OR LOWER(p.nombres) LIKE LOWER(CONCAT('%', :buscar, '%'))
+                     OR LOWER(p.apellidos) LIKE LOWER(CONCAT('%', :buscar, '%'))
+                  )
+            """)
+    Page<Paciente> findByClinicaIdWithFilters(
+            @Param("clinicaId") Long clinicaId,
+            @Param("buscar") String buscar,
+            @Param("activo") Boolean activo,
+            Pageable pageable);
+
     Optional<Paciente> findByIdAndClinicaIdAndActivoTrue(Long id, Long clinicaId);
 
 }

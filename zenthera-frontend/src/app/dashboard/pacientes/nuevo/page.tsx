@@ -40,18 +40,14 @@ export default function NuevoPacientePage() {
 
   const mutation = useMutation({
     mutationFn: createPaciente,
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pacientes'] });
-      const newId = data?.data?.id || (data as any)?.id;
-      if (!newId) {
-        console.error("No ID found in creation response:", data);
-        router.push('/dashboard/pacientes');
-      } else {
-        router.push(`/dashboard/pacientes/${newId}`);
-      }
+      sessionStorage.setItem('paciente_creado', 'true');
+      router.push('/dashboard/pacientes');
     },
-    onError: (error: any) => {
-      setServerError(error.response?.data?.message || 'Error al crear el paciente');
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      setServerError(err.response?.data?.message || 'Error al crear el paciente');
     }
   });
 

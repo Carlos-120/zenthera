@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
@@ -53,9 +54,13 @@ public class PacienteController {
         @GetMapping("/paginado")
         public ResponseEntity<ApiResponse<PageResponse<PacienteListResponse>>> listarPaginado(
                         @RequestParam(defaultValue = "0") int page,
-                        @RequestParam(defaultValue = "10") int size) {
+                        @RequestParam(defaultValue = "10") int size,
+                        @RequestParam(required = false) String search,
+                        @RequestParam(required = false) Boolean activo,
+                        @RequestParam(required = false, defaultValue = "createdAt") String sort,
+                        @RequestParam(required = false, defaultValue = "desc") String direction) {
 
-                PageResponse<PacienteListResponse> pacientes = pacienteService.listar(page, size);
+                PageResponse<PacienteListResponse> pacientes = pacienteService.listar(page, size, search, activo, sort, direction);
 
                 return ResponseEntity.ok(
                                 ApiResponse.success(
@@ -91,6 +96,21 @@ public class PacienteController {
                                 ApiResponse.<PacienteResponse>builder()
                                                 .success(true)
                                                 .message("Paciente actualizado correctamente")
+                                                .data(response)
+                                                .build());
+        }
+
+        @PatchMapping("/{id}/estado")
+        public ResponseEntity<ApiResponse<PacienteResponse>> actualizarEstado(
+                        @PathVariable Long id,
+                        @RequestBody com.zenthera.dto.paciente.EstadoPacienteRequest request) {
+
+                PacienteResponse response = pacienteService.actualizarEstado(id, request.getActivo());
+
+                return ResponseEntity.ok(
+                                ApiResponse.<PacienteResponse>builder()
+                                                .success(true)
+                                                .message("Estado del paciente actualizado correctamente.")
                                                 .data(response)
                                                 .build());
         }
