@@ -303,7 +303,7 @@ describe('LoginPage registration confirmation', () => {
     renderWithQuery(<LoginPage />);
 
     expect(screen.getByRole('status')).toHaveTextContent(
-      'Cl\u00ednica registrada correctamente. Revisa tu correo para activar la cuenta del administrador.'
+      'Cl\u00ednica registrada correctamente. Ya puedes iniciar sesi\u00f3n con las credenciales que creaste.'
     );
   });
 

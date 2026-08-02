@@ -71,7 +71,7 @@ export default function LoginPage() {
 
         {registered && (
           <div role="status" className="mb-6 rounded-lg border border-success/20 bg-success/10 p-4 text-sm text-success">
-            Clínica registrada correctamente. Revisa tu correo para activar la cuenta del administrador.
+            Clínica registrada correctamente. Ya puedes iniciar sesión con las credenciales que creaste.
           </div>
         )}
 
