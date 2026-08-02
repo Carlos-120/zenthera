@@ -40,8 +40,12 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return usuario.getActivo() &&
-               usuario.getClinica() != null &&
-               usuario.getClinica().getActiva();
+        if (!usuario.getActivo()) {
+            return false;
+        }
+        if (com.zenthera.enums.RolNombre.SUPER_ADMIN.equals(usuario.getRol().getNombre())) {
+            return true;
+        }
+        return usuario.getClinica() != null && usuario.getClinica().getActiva();
     }
 }

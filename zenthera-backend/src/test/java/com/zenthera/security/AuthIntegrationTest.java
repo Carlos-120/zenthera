@@ -58,6 +58,9 @@ public class AuthIntegrationTest {
     private ObjectMapper objectMapper;
 
     private Usuario medico;
+    private Usuario superAdmin;
+    private Usuario adminClinicaSinClinica;
+    private Usuario adminClinicaInactiva;
 
     @BeforeEach
     void setup() {
@@ -94,6 +97,60 @@ public class AuthIntegrationTest {
         medico.setClinica(clinica);
         medico.setActivo(true);
         medico = usuarioRepository.save(medico);
+
+        Rol rolSuperAdmin = rolRepository.findByNombre(RolNombre.SUPER_ADMIN)
+                .orElseGet(() -> {
+                    Rol r = new Rol();
+                    r.setNombre(RolNombre.SUPER_ADMIN);
+                    return rolRepository.save(r);
+                });
+
+        superAdmin = new Usuario();
+        superAdmin.setCedula("0000000000");
+        superAdmin.setNombres("Super");
+        superAdmin.setApellidos("Admin");
+        superAdmin.setCorreo("super@admin.com");
+        superAdmin.setPassword(passwordEncoder.encode("password123"));
+        superAdmin.setRol(rolSuperAdmin);
+        superAdmin.setClinica(null);
+        superAdmin.setActivo(true);
+        superAdmin = usuarioRepository.save(superAdmin);
+
+        Rol rolAdminClinica = rolRepository.findByNombre(RolNombre.ADMIN_CLINICA)
+                .orElseGet(() -> {
+                    Rol r = new Rol();
+                    r.setNombre(RolNombre.ADMIN_CLINICA);
+                    return rolRepository.save(r);
+                });
+
+        adminClinicaSinClinica = new Usuario();
+        adminClinicaSinClinica.setCedula("2222222222");
+        adminClinicaSinClinica.setNombres("Admin");
+        adminClinicaSinClinica.setApellidos("Sin Clinica");
+        adminClinicaSinClinica.setCorreo("admin@sinclinica.com");
+        adminClinicaSinClinica.setPassword(passwordEncoder.encode("password123"));
+        adminClinicaSinClinica.setRol(rolAdminClinica);
+        adminClinicaSinClinica.setClinica(null);
+        adminClinicaSinClinica.setActivo(true);
+        adminClinicaSinClinica = usuarioRepository.save(adminClinicaSinClinica);
+
+        Clinica clinicaInactiva = new Clinica();
+        clinicaInactiva.setNombre("Clinica Inactiva");
+        clinicaInactiva.setRuc("0987654321098");
+        clinicaInactiva.setRazonSocial("Clinica Inactiva SA");
+        clinicaInactiva.setActiva(false);
+        clinicaInactiva = clinicaRepository.save(clinicaInactiva);
+
+        adminClinicaInactiva = new Usuario();
+        adminClinicaInactiva.setCedula("3333333333");
+        adminClinicaInactiva.setNombres("Admin");
+        adminClinicaInactiva.setApellidos("Inactiva");
+        adminClinicaInactiva.setCorreo("admin@inactiva.com");
+        adminClinicaInactiva.setPassword(passwordEncoder.encode("password123"));
+        adminClinicaInactiva.setRol(rolAdminClinica);
+        adminClinicaInactiva.setClinica(clinicaInactiva);
+        adminClinicaInactiva.setActivo(true);
+        adminClinicaInactiva = usuarioRepository.save(adminClinicaInactiva);
     }
 
     @Test
@@ -311,5 +368,97 @@ public class AuthIntegrationTest {
         for (com.zenthera.entity.RefreshToken rt : familyTokens) {
             assertTrue(rt.isRevocado(), "El token con hash " + rt.getTokenHash() + " debería estar revocado tras el ataque concurrente.");
         }
+    }
+
+    @Test
+    void givenSuperAdminSinClinica_whenLogin_thenSuccessAndClinicaIsNull() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setCorreo("super@admin.com");
+        request.setPassword("password123");
+
+        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.rol").value("SUPER_ADMIN"))
+                .andExpect(jsonPath("$.data.clinica").isEmpty())
+                .andReturn();
+
+        String accessToken = com.jayway.jsonpath.JsonPath.read(result.getResponse().getContentAsString(), "$.data.accessToken");
+
+        // Comprobar /me es null-safe
+        mockMvc.perform(get("/api/v1/auth/me")
+                .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.rol").value("SUPER_ADMIN"))
+                .andExpect(jsonPath("$.data.clinicaId").isEmpty())
+                .andExpect(jsonPath("$.data.onboardingCompletado").isEmpty());
+    }
+
+    @Test
+    void givenAdminClinicaSinClinica_whenLogin_thenUnauthorized() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setCorreo("admin@sinclinica.com");
+        request.setPassword("password123");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void givenAdminClinicaInactiva_whenLogin_thenUnauthorized() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setCorreo("admin@inactiva.com");
+        request.setPassword("password123");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void givenInactiveUser_whenLogin_thenUnauthorized() throws Exception {
+        medico.setActivo(false);
+        usuarioRepository.save(medico);
+
+        LoginRequest request = new LoginRequest();
+        request.setCorreo("house@clinic.com");
+        request.setPassword("password123");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void givenBlockedUser_whenLogin_thenUnauthorized() throws Exception {
+        medico.setBloqueado(true);
+        usuarioRepository.save(medico);
+
+        LoginRequest request = new LoginRequest();
+        request.setCorreo("house@clinic.com");
+        request.setPassword("password123");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Origin", "http://localhost:3000")
+                .header("X-Requested-With", "XMLHttpRequest")
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
     }
 }

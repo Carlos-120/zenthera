@@ -24,6 +24,14 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() ->
                         new UsernameNotFoundException("Usuario no encontrado"));
 
+        if (com.zenthera.enums.RolNombre.SUPER_ADMIN.equals(usuario.getRol().getNombre())) {
+            return new CustomUserDetails(usuario);
+        }
+
+        if (usuario.getClinica() == null) {
+            throw new org.springframework.security.authentication.DisabledException("El usuario debe pertenecer a una clínica");
+        }
+
         if (!usuario.getClinica().getActiva()) {
             throw new org.springframework.security.authentication.DisabledException("La clínica está inactiva");
         }

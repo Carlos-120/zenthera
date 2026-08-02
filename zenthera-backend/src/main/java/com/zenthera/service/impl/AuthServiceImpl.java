@@ -84,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
                 .nombreCompleto(usuario.getNombres() + " " + usuario.getApellidos())
                 .correo(usuario.getCorreo())
                 .rol(usuario.getRol().getNombre().name())
-                .clinica(usuario.getClinica().getNombre())
+                .clinica(usuario.getClinica() != null ? usuario.getClinica().getNombre() : null)
                 .build();
 
         return AuthResult.builder()
@@ -119,8 +119,13 @@ public class AuthServiceImpl implements AuthService {
 
         // 4. Validar tenant — usuario y clínica activos
         Usuario usuario = token.getUsuario();
-        if (!usuario.getActivo() || !usuario.getClinica().getActiva()) {
-            throw new IllegalArgumentException("Usuario o clínica inactivos");
+        if (!usuario.getActivo()) {
+            throw new IllegalArgumentException("Usuario inactivo");
+        }
+        if (!com.zenthera.enums.RolNombre.SUPER_ADMIN.equals(usuario.getRol().getNombre())) {
+            if (usuario.getClinica() == null || !usuario.getClinica().getActiva()) {
+                throw new IllegalArgumentException("Clínica inactiva o no asignada");
+            }
         }
 
         // 5. Revocar token actual e insertar nuevo — misma TX, antes del commit
@@ -163,17 +168,18 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public MeResponse getMe() {
-        Long tenantId = TenantContext.getCurrentTenant();
-        if (tenantId == null) {
-            throw new IllegalStateException("Contexto de seguridad sin tenant asignado");
-        }
-
         // El Authentication debe contener el correo inyectado por JwtAuthenticationFilter
         String correo = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
 
         Usuario usuario = usuarioRepository.findByCorreoAndActivoTrue(correo)
-                .filter(u -> u.getClinica().getId().equals(tenantId))
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado en el tenant actual"));
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        if (!com.zenthera.enums.RolNombre.SUPER_ADMIN.equals(usuario.getRol().getNombre())) {
+            Long tenantId = TenantContext.getCurrentTenant();
+            if (tenantId == null || usuario.getClinica() == null || !usuario.getClinica().getId().equals(tenantId)) {
+                throw new IllegalStateException("Contexto de seguridad sin tenant asignado o mismatch");
+            }
+        }
 
         return MeResponse.builder()
                 .id(usuario.getId())
