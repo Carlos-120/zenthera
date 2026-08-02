@@ -20,7 +20,7 @@ describe('RoleGuard', () => {
     correo: 'test@test.com',
     rol: 'ADMIN_CLINICA',
     clinicaId: 1,
-    clinicaNombre: 'Mi Clinica'
+    clinicaNombre: 'Mi Clinica', onboardingCompletado: true
   };
 
   beforeEach(() => {

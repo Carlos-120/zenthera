@@ -58,7 +58,7 @@ describe('ClinicasPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAuthStore.setState({
-      usuario: { id: 1, correo: 'admin@test.com', nombres: 'Admin', apellidos: 'Test', rol: 'SUPER_ADMIN', clinicaId: 1, clinicaNombre: 'Test' },
+      usuario: { id: 1, correo: 'admin@test.com', nombres: 'Admin', apellidos: 'Test', rol: 'SUPER_ADMIN', clinicaId: 1, clinicaNombre: 'Test', onboardingCompletado: true },
       accessToken: 'mock-token',
       isAuthenticated: true
     });
@@ -69,7 +69,7 @@ describe('ClinicasPage', () => {
 
   it('bloquea el acceso si el rol es incorrecto', () => {
     useAuthStore.setState({
-      usuario: { id: 2, correo: 'med@test.com', nombres: 'Med', apellidos: 'Test', rol: 'MEDICO', clinicaId: 1, clinicaNombre: 'Test' },
+      usuario: { id: 2, correo: 'med@test.com', nombres: 'Med', apellidos: 'Test', rol: 'MEDICO', clinicaId: 1, clinicaNombre: 'Test', onboardingCompletado: true },
     });
 
     renderWithProviders(<ClinicasPage />);

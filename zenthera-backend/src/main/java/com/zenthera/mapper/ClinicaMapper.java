@@ -47,6 +47,8 @@ public class ClinicaMapper {
         response.setZonaHoraria(clinica.getZonaHoraria());
         response.setLogo(clinica.getLogo());
         response.setActiva(clinica.getActiva());
+        response.setOnboardingCompletado(clinica.getOnboardingCompletado());
+        response.setOnboardingCompletadoEn(clinica.getOnboardingCompletadoEn());
 
         return response;
     }

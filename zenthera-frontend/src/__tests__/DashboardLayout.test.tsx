@@ -38,7 +38,7 @@ describe('DashboardLayout', () => {
     correo: 'test@test.com',
     rol: 'ADMIN_CLINICA',
     clinicaId: 1,
-    clinicaNombre: 'Mi Clinica'
+    clinicaNombre: 'Mi Clinica', onboardingCompletado: true
   };
 
   const mockSuperAdmin: UserProfile = {
@@ -48,7 +48,7 @@ describe('DashboardLayout', () => {
     correo: 'super@test.com',
     rol: 'SUPER_ADMIN',
     clinicaId: 0,
-    clinicaNombre: 'Sistema'
+    clinicaNombre: 'Sistema', onboardingCompletado: true
   };
 
   beforeEach(() => {

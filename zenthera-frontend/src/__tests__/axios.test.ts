@@ -21,7 +21,7 @@ describe('Axios Interceptors', () => {
 
   it('debe agregar el token de autorización si existe en el estado', async () => {
     const testUser = {
-      id: 1, nombres: 'A', apellidos: 'B', correo: 'a@b.com', rol: 'ADMIN', clinicaId: 1, clinicaNombre: 'Test'
+      id: 1, nombres: 'A', apellidos: 'B', correo: 'a@b.com', rol: 'ADMIN', clinicaId: 1, clinicaNombre: 'Test', onboardingCompletado: true
     };
     useAuthStore.getState().setAuth('token123', testUser);
 
