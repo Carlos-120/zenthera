@@ -27,16 +27,41 @@ public interface MedicoRepository extends JpaRepository<Medico, Long> {
     @Query("""
             SELECT m
             FROM Medico m
-            WHERE m.activo = true
+            WHERE m.clinica.id = :clinicaId
+              AND (:activo IS NULL OR m.activo = :activo)
+              AND (:especialidad IS NULL OR m.especialidad = :especialidad)
               AND (
-                    LOWER(m.cedula) LIKE LOWER(CONCAT('%', :buscar, '%'))
+                 :buscar IS NULL OR :buscar = '' OR
+                 LOWER(m.cedula) LIKE LOWER(CONCAT('%', :buscar, '%'))
                  OR LOWER(m.nombres) LIKE LOWER(CONCAT('%', :buscar, '%'))
                  OR LOWER(m.apellidos) LIKE LOWER(CONCAT('%', :buscar, '%'))
                  OR LOWER(m.especialidad) LIKE LOWER(CONCAT('%', :buscar, '%'))
               )
             """)
-    List<Medico> buscarMedicos(@Param("buscar") String buscar);
+    Page<Medico> buscarMedicosPaginado(
+            @Param("clinicaId") Long clinicaId,
+            @Param("buscar") String buscar,
+            @Param("activo") Boolean activo,
+            @Param("especialidad") String especialidad,
+            Pageable pageable);
+
+    @Query("""
+            SELECT m
+            FROM Medico m
+            WHERE m.clinica.id = :clinicaId
+              AND m.activo = true
+              AND (
+                 :buscar IS NULL OR :buscar = '' OR
+                 LOWER(m.cedula) LIKE LOWER(CONCAT('%', :buscar, '%'))
+                 OR LOWER(m.nombres) LIKE LOWER(CONCAT('%', :buscar, '%'))
+                 OR LOWER(m.apellidos) LIKE LOWER(CONCAT('%', :buscar, '%'))
+                 OR LOWER(m.especialidad) LIKE LOWER(CONCAT('%', :buscar, '%'))
+              )
+            """)
+    List<Medico> buscarMedicos(@Param("clinicaId") Long clinicaId, @Param("buscar") String buscar);
 
     Optional<Medico> findByIdAndClinicaIdAndActivoTrue(Long id, Long clinicaId);
+
+    Optional<Medico> findByIdAndClinicaId(Long id, Long clinicaId);
 
 }

@@ -38,11 +38,12 @@ public class MedicoServiceImpl implements MedicoService {
     @Override
     public MedicoResponse crear(MedicoRequest request) {
 
-        Clinica clinica = clinicaRepository.findById(request.getClinicaId())
+        Long tenantId = TenantContext.getCurrentTenant();
+        Clinica clinica = clinicaRepository.findById(tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Clinica no encontrada."));
 
         if (medicoRepository.existsByClinicaIdAndCedulaAndActivoTrue(
-                request.getClinicaId(), request.getCedula())) {
+                tenantId, request.getCedula())) {
 
             throw new IllegalArgumentException(
                     "Ya existe un medico con esa cedula en la clinica.");
@@ -58,7 +59,8 @@ public class MedicoServiceImpl implements MedicoService {
 
     @Override
     public MedicoResponse obtenerPorId(Long id) {
-        return medicoRepository.findById(id)
+        Long tenantId = TenantContext.getCurrentTenant();
+        return medicoRepository.findByIdAndClinicaId(id, tenantId)
                 .map(medicoMapper::toResponse)
                 .orElseThrow(() -> new IllegalArgumentException("Medico no encontrado."));
     }
@@ -72,11 +74,11 @@ public class MedicoServiceImpl implements MedicoService {
     }
 
     @Override
-    public PageResponse<MedicoListResponse> listar(int page, int size) {
+    public PageResponse<MedicoListResponse> listar(int page, int size, String buscar, Boolean activo) {
         Long tenantId = TenantContext.getCurrentTenant();
 
         Page<MedicoListResponse> medicos = medicoRepository
-                .findByClinicaIdAndActivoTrue(tenantId, PageRequest.of(page, size))
+                .buscarMedicosPaginado(tenantId, buscar, activo, null, PageRequest.of(page, size))
                 .map(medicoMapper::toListResponse);
 
         return PageResponseMapper.from(medicos);
@@ -84,26 +86,26 @@ public class MedicoServiceImpl implements MedicoService {
 
     @Override
     public List<MedicoListResponse> buscar(String buscar) {
+        Long tenantId = TenantContext.getCurrentTenant();
         return medicoMapper.toListResponse(
-                medicoRepository.buscarMedicos(buscar));
+                medicoRepository.buscarMedicos(tenantId, buscar));
     }
 
     @Override
     public MedicoResponse actualizar(Long id, MedicoRequest request) {
-        Medico medico = medicoRepository.findById(id)
+        Long tenantId = TenantContext.getCurrentTenant();
+
+        Medico medico = medicoRepository.findByIdAndClinicaId(id, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Medico no encontrado."));
 
-        Clinica clinica = clinicaRepository.findById(request.getClinicaId())
-                .orElseThrow(() -> new IllegalArgumentException("Clinica no encontrada."));
-
         if (medicoRepository.existsByClinicaIdAndCedulaAndActivoTrueAndIdNot(
-                request.getClinicaId(), request.getCedula(), id)) {
+                tenantId, request.getCedula(), id)) {
 
             throw new IllegalArgumentException(
                     "Ya existe un medico con esa cedula en la clinica.");
         }
 
-        medico.setClinica(clinica);
+        // medico.setClinica(clinica); // Not needed anymore as tenant isolation handles it
         medico.setCedula(request.getCedula());
         medico.setNombres(request.getNombres());
         medico.setApellidos(request.getApellidos());
@@ -122,8 +124,20 @@ public class MedicoServiceImpl implements MedicoService {
     }
 
     @Override
+    public MedicoResponse cambiarEstado(Long id, Boolean activo) {
+        Long tenantId = TenantContext.getCurrentTenant();
+        Medico medico = medicoRepository.findByIdAndClinicaId(id, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Medico no encontrado."));
+
+        medico.setActivo(activo);
+        Medico actualizado = medicoRepository.save(medico);
+        return medicoMapper.toResponse(actualizado);
+    }
+
+    @Override
     public void eliminar(Long id) {
-        Medico medico = medicoRepository.findById(id)
+        Long tenantId = TenantContext.getCurrentTenant();
+        Medico medico = medicoRepository.findByIdAndClinicaId(id, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Medico no encontrado."));
         medico.setActivo(false);
         medicoRepository.save(medico);
