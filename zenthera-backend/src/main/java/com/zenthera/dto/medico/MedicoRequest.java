@@ -2,14 +2,12 @@ package com.zenthera.dto.medico;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 public class MedicoRequest {
 
-    @NotNull(message = "La clínica es obligatoria")
     private Long clinicaId;
 
     @NotBlank(message = "La cédula es obligatoria")

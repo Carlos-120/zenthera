@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -56,9 +57,11 @@ public class MedicoController {
     @GetMapping("/paginado")
     public ResponseEntity<ApiResponse<PageResponse<MedicoListResponse>>> listarPaginado(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo) {
 
-        PageResponse<MedicoListResponse> medicos = medicoService.listar(page, size);
+        PageResponse<MedicoListResponse> medicos = medicoService.listar(page, size, search, activo);
 
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -85,6 +88,21 @@ public class MedicoController {
                         "Medico obtenido correctamente.",
                         medicoService.obtenerPorId(id)));
     }
+
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<ApiResponse<MedicoResponse>> cambiarEstado(
+            @PathVariable Long id,
+            @RequestParam Boolean activo) {
+
+        MedicoResponse response = medicoService.cambiarEstado(id, activo);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Estado del médico actualizado correctamente.",
+                        response));
+    }
+
+
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<MedicoResponse>> actualizar(

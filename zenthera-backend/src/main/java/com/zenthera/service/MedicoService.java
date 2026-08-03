@@ -15,11 +15,13 @@ public interface MedicoService {
 
     List<MedicoListResponse> listar();
 
-    PageResponse<MedicoListResponse> listar(int page, int size);
+    PageResponse<MedicoListResponse> listar(int page, int size, String buscar, Boolean activo);
 
     List<MedicoListResponse> buscar(String buscar);
 
     MedicoResponse actualizar(Long id, MedicoRequest request);
+
+    MedicoResponse cambiarEstado(Long id, Boolean activo);
 
     void eliminar(Long id);
 
