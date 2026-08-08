@@ -11,9 +11,6 @@ import lombok.Setter;
 public class UsuarioRequest {
 
     @NotNull
-    private Long clinicaId;
-
-    @NotNull
     private Long rolId;
 
     @NotBlank

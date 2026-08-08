@@ -5,15 +5,18 @@ import com.zenthera.dto.usuario.UsuarioResponse;
 
 import java.util.List;
 
+import com.zenthera.dto.common.PageResponse;
+import org.springframework.data.domain.Pageable;
+
 public interface UsuarioService {
 
-    UsuarioResponse guardar(UsuarioRequest request);
+    UsuarioResponse guardar(Long clinicaId, UsuarioRequest request);
 
-    List<UsuarioResponse> listar();
+    PageResponse<UsuarioResponse> listar(Long clinicaId, String search, Boolean activo, Long rolId, Pageable pageable);
 
-    UsuarioResponse buscarPorId(Long id);
+    UsuarioResponse buscarPorId(Long id, Long clinicaId);
 
-    UsuarioResponse actualizar(Long id, UsuarioRequest request);
+    UsuarioResponse actualizar(Long id, Long clinicaId, UsuarioRequest request);
 
-    void eliminar(Long id);
+    UsuarioResponse actualizarEstado(Long id, Long clinicaId, boolean activo);
 }
