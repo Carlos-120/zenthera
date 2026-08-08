@@ -3,6 +3,7 @@ package com.zenthera.repository;
 import com.zenthera.entity.Usuario;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpecificationExecutor<Usuario> {
 
     Optional<Usuario> findByCorreo(String correo);
 
@@ -25,4 +26,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByCorreo(String correo);
 
     boolean existsByCedula(String cedula);
+
+    Optional<Usuario> findByIdAndClinicaId(Long id, Long clinicaId);
+
+    boolean existsByCorreoAndClinicaId(String correo, Long clinicaId);
+
+    boolean existsByCedulaAndClinicaId(String cedula, Long clinicaId);
 }
