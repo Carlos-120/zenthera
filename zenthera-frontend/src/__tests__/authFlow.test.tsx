@@ -47,8 +47,8 @@ describe('Flujos de autenticaci\u00f3n', () => {
     await waitFor(() => {
       expect(useAuthStore.getState().accessToken).toBe('token-silencioso');
       expect(useAuthStore.getState().usuario?.clinicaNombre).toBe('Clinica Test');
+      expect(mockPush).toHaveBeenCalledWith('/dashboard');
     });
-    expect(mockPush).toHaveBeenCalledWith('/dashboard');
   });
 
   it('Login env\u00eda credenciales, consulta /me y redirige al dashboard', async () => {
