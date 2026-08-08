@@ -18,8 +18,6 @@ public interface PacienteMapper {
     @Mapping(target = "updatedAt", ignore = true)
     Paciente toEntity(PacienteRequest request);
 
-    @Mapping(source = "clinica.id", target = "clinicaId")
-    @Mapping(source = "clinica.nombre", target = "nombreClinica")
     PacienteResponse toResponse(Paciente paciente);
 
     PacienteListResponse toListResponse(Paciente paciente);

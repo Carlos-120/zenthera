@@ -243,7 +243,7 @@ public class SecurityIntegrationTest {
         // Intenta obtener al paciente de la clínica B
         mockMvc.perform(get("/api/pacientes/" + pacienteB.getId())
                 .header("Authorization", "Bearer " + validJwtMedico))
-                .andExpect(status().isBadRequest()) // IllegalArgumentException de paciente no encontrado mapea a bad request o internal server error en el handler global actual
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false));
     }
 

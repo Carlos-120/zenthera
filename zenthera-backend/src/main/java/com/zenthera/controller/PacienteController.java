@@ -81,8 +81,12 @@ public class PacienteController {
         }
 
         @GetMapping("/{id}")
-        public PacienteResponse obtenerPorId(@PathVariable Long id) {
-                return pacienteService.obtenerPorId(id);
+        public ResponseEntity<ApiResponse<PacienteResponse>> obtenerPorId(@PathVariable Long id) {
+                PacienteResponse response = pacienteService.obtenerPorId(id);
+                return ResponseEntity.ok(
+                                ApiResponse.success(
+                                                "Paciente obtenido correctamente.",
+                                                response));
         }
 
         @PutMapping("/{id}")
