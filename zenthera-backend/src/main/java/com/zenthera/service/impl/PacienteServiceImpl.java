@@ -89,14 +89,14 @@ public class PacienteServiceImpl implements PacienteService {
         Long tenantId = TenantContext.getCurrentTenant();
         return pacienteRepository.findByIdAndClinicaId(id, tenantId)
                 .map(pacienteMapper::toResponse)
-                .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado o pertenece a otra clínica"));
+                .orElseThrow(() -> new com.zenthera.exception.ResourceNotFoundException("Paciente no encontrado"));
     }
 
     @Override
     public PacienteResponse actualizar(Long id, PacienteRequest request) {
         Long tenantId = TenantContext.getCurrentTenant();
         Paciente paciente = pacienteRepository.findByIdAndClinicaId(id, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado o pertenece a otra clínica"));
+                .orElseThrow(() -> new com.zenthera.exception.ResourceNotFoundException("Paciente no encontrado"));
 
         // La clínica no se actualiza (se mantiene la del tenant)
         paciente.setCedula(request.getCedula());
@@ -122,7 +122,7 @@ public class PacienteServiceImpl implements PacienteService {
     public PacienteResponse actualizarEstado(Long id, Boolean activo) {
         Long tenantId = TenantContext.getCurrentTenant();
         Paciente paciente = pacienteRepository.findByIdAndClinicaId(id, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado o pertenece a otra clínica"));
+                .orElseThrow(() -> new com.zenthera.exception.ResourceNotFoundException("Paciente no encontrado"));
 
         paciente.setActivo(activo);
 
@@ -134,7 +134,7 @@ public class PacienteServiceImpl implements PacienteService {
     public void eliminar(Long id) {
         Long tenantId = TenantContext.getCurrentTenant();
         Paciente paciente = pacienteRepository.findByIdAndClinicaId(id, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado o pertenece a otra clínica"));
+                .orElseThrow(() -> new com.zenthera.exception.ResourceNotFoundException("Paciente no encontrado"));
 
         paciente.setActivo(false);
 

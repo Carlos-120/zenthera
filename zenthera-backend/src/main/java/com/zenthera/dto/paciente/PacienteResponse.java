@@ -13,9 +13,7 @@ public class PacienteResponse {
 
     private Long id;
 
-    private Long clinicaId;
 
-    private String nombreClinica;
 
     private String cedula;
 
