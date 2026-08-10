@@ -15,6 +15,7 @@ import com.zenthera.util.HashUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -52,6 +53,9 @@ public class ActivationIntegrationTest {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private RolRepository rolRepository;
 
     @Autowired
@@ -68,6 +72,7 @@ public class ActivationIntegrationTest {
     @BeforeEach
     void setUp() {
         activationTokenRepository.deleteAll();
+        jdbcTemplate.execute("DELETE FROM medicos");
         usuarioRepository.deleteAll();
         clinicaRepository.deleteAll();
 

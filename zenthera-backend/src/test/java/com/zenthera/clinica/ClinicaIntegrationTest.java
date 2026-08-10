@@ -16,6 +16,7 @@ import com.zenthera.security.jwt.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -53,6 +54,9 @@ public class ClinicaIntegrationTest {
     private UsuarioRepository usuarioRepository;
 
     @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private RolRepository rolRepository;
 
     @Autowired
@@ -71,6 +75,7 @@ public class ClinicaIntegrationTest {
     @BeforeEach
     void setUp() {
         activationTokenRepository.deleteAll();
+        jdbcTemplate.execute("DELETE FROM medicos");
         usuarioRepository.deleteAll();
         clinicaRepository.deleteAll();
 
@@ -308,9 +313,10 @@ public class ClinicaIntegrationTest {
                 .header("Authorization", "Bearer " + validJwtSuperAdmin)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
+        // Assert
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("El correo electrónico proporcionado ya se encuentra registrado por otra cuenta."));
+                .andExpect(jsonPath("$.message").value("Ya existe una cuenta con este correo."));
     }
 
     @Test

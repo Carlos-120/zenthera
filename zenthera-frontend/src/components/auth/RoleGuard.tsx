@@ -16,10 +16,16 @@ export function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
   const isAuthorized = usuario ? allowedRoles.includes(usuario.rol) : false;
 
   useEffect(() => {
-    if (usuario && !isAuthorized) {
-      // Simular un UX de acceso denegado redirigiendo o mostrando error.
-      // Aquí optamos por redirigir al dashboard principal.
-      router.replace('/dashboard');
+    if (usuario) {
+      if (usuario.cambiarPassword) {
+        router.replace('/cambiar-password');
+        return;
+      }
+      if (!isAuthorized) {
+        // Simular un UX de acceso denegado redirigiendo o mostrando error.
+        // Aquí optamos por redirigir al dashboard principal.
+        router.replace('/dashboard');
+      }
     }
   }, [usuario, isAuthorized, router]);
 

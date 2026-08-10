@@ -128,6 +128,19 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
+    public List<com.zenthera.dto.usuario.UsuarioDisponibleResponse> getUsuariosMedicosDisponibles(Long clinicaId) {
+        return usuarioRepository.findUsuariosMedicosDisponibles(clinicaId).stream()
+                .map(u -> com.zenthera.dto.usuario.UsuarioDisponibleResponse.builder()
+                        .id(u.getId())
+                        .nombres(u.getNombres())
+                        .apellidos(u.getApellidos())
+                        .correo(u.getCorreo())
+                        .cedula(u.getCedula())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
     public UsuarioResponse actualizar(Long id, Long clinicaId, UsuarioRequest request) {
 
         Usuario usuario = usuarioRepository.findByIdAndClinicaId(id, clinicaId)

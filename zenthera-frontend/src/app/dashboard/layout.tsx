@@ -1,4 +1,5 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ForcePasswordChangeGuard } from '@/components/auth/ForcePasswordChangeGuard';
 
 export default function DashboardRootLayout({
   children,
@@ -6,8 +7,10 @@ export default function DashboardRootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <DashboardLayout>
-      {children}
-    </DashboardLayout>
+    <ForcePasswordChangeGuard>
+      <DashboardLayout>
+        {children}
+      </DashboardLayout>
+    </ForcePasswordChangeGuard>
   );
 }

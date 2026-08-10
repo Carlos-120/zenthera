@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
                 List<String> errors = ex.getBindingResult()
                                 .getFieldErrors()
                                 .stream()
-                                .map(error -> error.getDefaultMessage())
+                                .map(error -> error.getField() + ": " + error.getDefaultMessage())
                                 .toList();
 
                 ApiResponse<Object> response = ApiResponse.<Object>builder()
@@ -91,7 +91,9 @@ public class GlobalExceptionHandler {
                 if (msg != null) {
                         String msgLower = msg.toLowerCase();
                         if (msgLower.contains("usuarios_correo_key") || msgLower.contains("uk_usuario_correo")) {
-                                userMessage = "El correo electrónico proporcionado ya se encuentra registrado por otra cuenta.";
+                                userMessage = "Ya existe una cuenta con este correo.";
+                        } else if (msgLower.contains("uk_medico_clinica_cedula")) {
+                                userMessage = "Ya existe un médico con esta identificación.";
                         } else if (msgLower.contains("clinicas_ruc_key") || msgLower.contains("uk_clinica_ruc")) {
                                 userMessage = "El RUC proporcionado ya se encuentra registrado.";
                         }

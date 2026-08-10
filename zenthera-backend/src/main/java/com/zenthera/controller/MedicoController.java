@@ -5,7 +5,10 @@ import com.zenthera.dto.common.PageResponse;
 import com.zenthera.dto.medico.MedicoListResponse;
 import com.zenthera.dto.medico.MedicoRequest;
 import com.zenthera.dto.medico.MedicoResponse;
+import com.zenthera.dto.medico.UsuarioMedicoLinkRequest;
 import com.zenthera.service.MedicoService;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import jakarta.validation.Valid;
 
@@ -34,6 +37,7 @@ public class MedicoController {
         this.medicoService = medicoService;
     }
 
+    @PreAuthorize("hasAuthority('ADMIN_CLINICA')")
     @PostMapping
     public ResponseEntity<ApiResponse<MedicoResponse>> crear(
             @Valid @RequestBody MedicoRequest request) {
@@ -89,6 +93,7 @@ public class MedicoController {
                         medicoService.obtenerPorId(id)));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN_CLINICA')")
     @PatchMapping("/{id}/estado")
     public ResponseEntity<ApiResponse<MedicoResponse>> cambiarEstado(
             @PathVariable Long id,
@@ -104,6 +109,7 @@ public class MedicoController {
 
 
 
+    @PreAuthorize("hasAuthority('ADMIN_CLINICA')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<MedicoResponse>> actualizar(
             @PathVariable Long id,
@@ -117,6 +123,7 @@ public class MedicoController {
                         response));
     }
 
+    @PreAuthorize("hasAuthority('ADMIN_CLINICA')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
 
@@ -127,5 +134,59 @@ public class MedicoController {
                         .success(true)
                         .message("Medico eliminado correctamente.")
                         .build());
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN_CLINICA')")
+    @PutMapping("/{id}/usuario")
+    public ResponseEntity<ApiResponse<MedicoResponse>> vincularUsuario(
+            @PathVariable Long id,
+            @RequestBody UsuarioMedicoLinkRequest request) {
+
+        MedicoResponse response = medicoService.vincularUsuario(id, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Usuario vinculado al médico correctamente.",
+                        response));
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN_CLINICA')")
+    @PostMapping("/{id}/cuenta")
+    public ResponseEntity<ApiResponse<MedicoResponse>> crearCuentaAcceso(
+            @PathVariable Long id,
+            @Valid @RequestBody com.zenthera.dto.medico.RestablecerPasswordRequest request) {
+
+        MedicoResponse response = medicoService.crearCuentaAcceso(id, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Cuenta de acceso creada y vinculada correctamente.",
+                        response));
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN_CLINICA')")
+    @PostMapping("/{id}/cuenta/restablecer-password")
+    public ResponseEntity<ApiResponse<MedicoResponse>> restablecerPasswordMedico(
+            @PathVariable Long id,
+            @Valid @RequestBody com.zenthera.dto.medico.RestablecerPasswordRequest request) {
+
+        MedicoResponse response = medicoService.restablecerPasswordMedico(id, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Contraseña restablecida correctamente. El usuario deberá cambiarla en su próximo inicio de sesión.",
+                        response));
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN_CLINICA')")
+    @DeleteMapping("/{id}/usuario")
+    public ResponseEntity<ApiResponse<MedicoResponse>> desvincularUsuario(@PathVariable Long id) {
+
+        MedicoResponse response = medicoService.desvincularUsuario(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Usuario desvinculado del médico correctamente.",
+                        response));
     }
 }

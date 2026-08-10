@@ -11,16 +11,45 @@ import { AlertCircle, ArrowLeft, Loader2, Save, Stethoscope } from 'lucide-react
 import Link from 'next/link';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 
+const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+
 const MedicoRequestSchema = z.object({
-  cedula: z.string().min(10, 'La cédula debe tener al menos 10 caracteres').max(13, 'La cédula debe tener máximo 13 caracteres'),
-  nombres: z.string().min(2, 'Los nombres son obligatorios').max(80),
-  apellidos: z.string().min(2, 'Los apellidos son obligatorios').max(80),
+  cedula: z.string().min(10, 'La cédula debe tener al menos 10 caracteres').max(13, 'La cédula debe tener máximo 13 caracteres').regex(/^\d+$/, 'La cédula solo puede contener números'),
+  nombres: z.string().min(2, 'Los nombres son obligatorios').max(80, 'Los nombres no pueden exceder 80 caracteres').regex(nombreRegex, 'Los nombres solo pueden contener letras, espacios y acentos'),
+  apellidos: z.string().min(2, 'Los apellidos son obligatorios').max(80, 'Los apellidos no pueden exceder 80 caracteres').regex(nombreRegex, 'Los apellidos solo pueden contener letras, espacios y acentos'),
   especialidad: z.string().min(2, 'La especialidad es obligatoria').max(100),
   registroProfesional: z.string().max(20).optional(),
   telefono: z.string().max(20).optional(),
   correo: z.string().email('Correo inválido').max(120),
   direccion: z.string().max(255).optional(),
   activo: z.boolean().optional(),
+  crearCuentaAcceso: z.boolean().optional(),
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.crearCuentaAcceso) {
+    if (!data.correo) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'El correo es obligatorio para crear una cuenta de acceso',
+        path: ['correo']
+      });
+    }
+    if (!data.password || data.password.length < 12 || data.password.length > 72) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'La contraseña debe tener entre 12 y 72 caracteres',
+        path: ['password']
+      });
+    }
+    if (data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Las contraseñas no coinciden',
+        path: ['confirmPassword']
+      });
+    }
+  }
 });
 
 type MedicoFormValues = z.infer<typeof MedicoRequestSchema>;
@@ -33,14 +62,20 @@ export default function NuevoMedicoPage() {
   const {
     register,
     handleSubmit,
+    watch,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<MedicoFormValues>({
     resolver: zodResolver(MedicoRequestSchema),
     defaultValues: {
       activo: true,
+      crearCuentaAcceso: true,
       especialidad: '',
     }
   });
+
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const crearCuentaAccesoWatch = watch('crearCuentaAcceso');
 
   const mutation = useMutation({
     mutationFn: createMedico,
@@ -49,8 +84,30 @@ export default function NuevoMedicoPage() {
       router.push('/dashboard/medicos');
     },
     onError: (error: Error | unknown) => {
-      const axiosError = error as { response?: { data?: { message?: string } } };
-      setServerError(axiosError.response?.data?.message || 'Error al registrar el médico.');
+      const axiosError = error as { response?: { data?: { message?: string, errors?: string[] } } };
+      const data = axiosError.response?.data;
+
+      if (data?.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+        let hasFieldErrors = false;
+        data.errors.forEach((errStr) => {
+          const splitIdx = errStr.indexOf(': ');
+          if (splitIdx > 0) {
+            const field = errStr.substring(0, splitIdx);
+            const msg = errStr.substring(splitIdx + 2);
+            const validFields = ['cedula', 'nombres', 'apellidos', 'especialidad', 'registroProfesional', 'telefono', 'correo', 'password', 'confirmPassword'];
+            if (validFields.includes(field)) {
+              setError(field as Parameters<typeof setError>[0], { type: 'server', message: msg });
+              hasFieldErrors = true;
+            }
+          }
+        });
+        if (hasFieldErrors) {
+          setServerError('Revisa los campos marcados e intenta nuevamente.');
+          return;
+        }
+      }
+
+      setServerError(data?.message || 'Error al registrar el médico.');
     }
   });
 
@@ -65,7 +122,10 @@ export default function NuevoMedicoPage() {
       activo: data.activo ?? true,
       registroProfesional: data.registroProfesional,
       telefono: data.telefono,
-      direccion: data.direccion
+      direccion: data.direccion,
+      crearCuentaAcceso: data.crearCuentaAcceso,
+      password: data.crearCuentaAcceso ? data.password : undefined,
+      confirmPassword: data.crearCuentaAcceso ? data.confirmPassword : undefined,
     };
     mutation.mutate(requestData);
   };
@@ -194,7 +254,7 @@ export default function NuevoMedicoPage() {
                 />
                 {errors.telefono && <p className="text-xs text-error mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {errors.telefono.message}</p>}
               </div>
-              
+
               <div className="space-y-1.5 md:col-span-2">
                 <label htmlFor="registroProfesional" className="block text-sm font-medium text-foreground/80">
                   Registro Profesional / Senescyt
@@ -210,6 +270,66 @@ export default function NuevoMedicoPage() {
                 {errors.registroProfesional && <p className="text-xs text-error mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {errors.registroProfesional.message}</p>}
               </div>
 
+            </div>
+
+            <div className="mt-8 border-t border-border pt-8">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                Acceso a Zenthera
+              </h3>
+
+              <div className="bg-surface/50 border border-border rounded-xl p-5 hover:border-primary/50 transition-colors">
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <div className="flex items-center h-5 mt-0.5">
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 rounded border-border text-primary focus:ring-primary cursor-pointer transition-colors"
+                      {...register('crearCuentaAcceso')}
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                      Crear cuenta de acceso para este médico
+                    </span>
+                    <span className="text-sm text-foreground/60 mt-1 leading-relaxed max-w-2xl">
+                      Se creará una cuenta con rol Médico y se le asignará una contraseña temporal. El profesional deberá cambiar su contraseña en el primer inicio de sesión.
+                    </span>
+                  </div>
+                </label>
+
+                {crearCuentaAccesoWatch && (
+                  <div className="mt-6 pt-6 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-4 fade-in duration-300">
+                    <div className="space-y-1.5">
+                      <label htmlFor="password" className="block text-sm font-medium text-foreground/80">
+                        Contraseña Temporal <span className="text-error">*</span>
+                      </label>
+                      <input
+                        id="password"
+                        type="password"
+                        className={`w-full px-4 py-2.5 rounded-xl border bg-surface/50 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                          errors.password ? 'border-error focus:ring-error' : 'border-border focus:ring-primary'
+                        }`}
+                        {...register('password')}
+                      />
+                      {errors.password && <p className="text-xs text-error mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {errors.password.message}</p>}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground/80">
+                        Confirmar Contraseña <span className="text-error">*</span>
+                      </label>
+                      <input
+                        id="confirmPassword"
+                        type="password"
+                        className={`w-full px-4 py-2.5 rounded-xl border bg-surface/50 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                          errors.confirmPassword ? 'border-error focus:ring-error' : 'border-border focus:ring-primary'
+                        }`}
+                        {...register('confirmPassword')}
+                      />
+                      {errors.confirmPassword && <p className="text-xs text-error mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {errors.confirmPassword.message}</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="pt-6 mt-6 border-t border-border flex flex-col-reverse md:flex-row items-center justify-end gap-3">

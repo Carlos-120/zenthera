@@ -64,4 +64,7 @@ public interface MedicoRepository extends JpaRepository<Medico, Long> {
 
     Optional<Medico> findByIdAndClinicaId(Long id, Long clinicaId);
 
+    Optional<Medico> findByUsuarioId(Long usuarioId);
+
+    boolean existsByUsuarioId(Long usuarioId);
 }

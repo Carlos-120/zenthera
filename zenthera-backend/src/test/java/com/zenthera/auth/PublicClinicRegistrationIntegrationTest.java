@@ -20,6 +20,7 @@ import com.zenthera.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -60,6 +61,9 @@ class PublicClinicRegistrationIntegrationTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private ClinicaRepository clinicaRepository;
     @SpyBean private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     @SpyBean private RolRepository rolRepository;
     @SpyBean private ActivationTokenRepository activationTokenRepository;
     @SpyBean private NotificationService notificationServiceSpy;
@@ -73,6 +77,7 @@ class PublicClinicRegistrationIntegrationTest {
     void setUp() {
         activationTokenRepository.deleteAll();
         refreshTokenRepository.deleteAll();
+        jdbcTemplate.execute("DELETE FROM medicos");
         usuarioRepository.deleteAll();
         clinicaRepository.deleteAll();
         notificationService.clear();

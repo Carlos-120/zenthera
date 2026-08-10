@@ -29,4 +29,9 @@ public class MedicoResponse {
 
     private Boolean activo;
 
+    private Long usuarioId;
+
+    private String correoUsuario;
+
+    private String estadoCuenta;
 }

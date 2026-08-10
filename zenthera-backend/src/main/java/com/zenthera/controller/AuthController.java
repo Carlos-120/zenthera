@@ -172,4 +172,21 @@ public class AuthController {
                             .build());
         }
     }
+    @PostMapping("/cambiar-password")
+    public ResponseEntity<ApiResponse<Void>> cambiarPassword(@Valid @RequestBody com.zenthera.dto.auth.CambiarPasswordRequest request) {
+        try {
+            authService.cambiarPassword(request);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(ApiResponse.<Void>builder()
+                            .success(true)
+                            .message("Contraseña cambiada exitosamente")
+                            .build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.<Void>builder()
+                            .success(false)
+                            .message(e.getMessage())
+                            .build());
+        }
+    }
 }

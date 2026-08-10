@@ -11,6 +11,10 @@ public interface MedicoService {
 
     MedicoResponse crear(MedicoRequest request);
 
+    MedicoResponse crearCuentaAcceso(Long medicoId, com.zenthera.dto.medico.RestablecerPasswordRequest request);
+
+    MedicoResponse restablecerPasswordMedico(Long medicoId, com.zenthera.dto.medico.RestablecerPasswordRequest request);
+
     MedicoResponse obtenerPorId(Long id);
 
     List<MedicoListResponse> listar();
@@ -25,4 +29,9 @@ public interface MedicoService {
 
     void eliminar(Long id);
 
+    MedicoResponse vincularUsuario(Long medicoId, com.zenthera.dto.medico.UsuarioMedicoLinkRequest request);
+
+    MedicoResponse desvincularUsuario(Long medicoId);
+
+    com.zenthera.entity.Medico getMedicoPorUsuarioAutenticado();
 }

@@ -19,4 +19,6 @@ public interface UsuarioService {
     UsuarioResponse actualizar(Long id, Long clinicaId, UsuarioRequest request);
 
     UsuarioResponse actualizarEstado(Long id, Long clinicaId, boolean activo);
+
+    java.util.List<com.zenthera.dto.usuario.UsuarioDisponibleResponse> getUsuariosMedicosDisponibles(Long clinicaId);
 }
