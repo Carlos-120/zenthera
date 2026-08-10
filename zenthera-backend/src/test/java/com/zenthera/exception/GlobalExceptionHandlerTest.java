@@ -53,7 +53,7 @@ public class GlobalExceptionHandlerTest {
         mockMvc.perform(get("/test-409-correo").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("El correo electrónico proporcionado ya se encuentra registrado por otra cuenta."));
+                .andExpect(jsonPath("$.message").value("Ya existe una cuenta con este correo."));
     }
 
     @Test

@@ -51,6 +51,7 @@ const headers = (token?: string) => ({
 });
 
 async function bodyOf(response: { json(): Promise<unknown> }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return response.json() as Promise<any>;
 }
 
@@ -433,7 +434,7 @@ test.describe('QA-CITAS-001 — backend y frontend reales', () => {
     const paciente = alpha.pacientes[1];
     const medico = alpha.medicos[0];
     const start = await findFreeInterval(request, alpha.token, paciente.id, medico.id, uniqueStart(testInfo), 45);
-    const motivo = e2eMotivo(`UI RecepciÃ³n ${Date.now()}`);
+    const motivo = e2eMotivo(`UI Recepción ${Date.now()}`);
     await uiLogin(page, USERS.recepcionistaAlpha);
     await page.goto('/dashboard/citas/nuevo');
     await page.getByLabel(/Paciente \*/).selectOption(String(paciente.id));

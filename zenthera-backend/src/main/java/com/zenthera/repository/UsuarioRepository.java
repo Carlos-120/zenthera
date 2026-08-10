@@ -32,4 +32,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long>, JpaSpec
     boolean existsByCorreoAndClinicaId(String correo, Long clinicaId);
 
     boolean existsByCedulaAndClinicaId(String cedula, Long clinicaId);
+
+    @Query("SELECT u FROM Usuario u WHERE u.clinica.id = :clinicaId AND u.rol.nombre = 'MEDICO' AND u.activo = true AND NOT EXISTS (SELECT 1 FROM Medico m WHERE m.usuario = u)")
+    java.util.List<Usuario> findUsuariosMedicosDisponibles(@Param("clinicaId") Long clinicaId);
 }

@@ -23,4 +23,7 @@ public class MedicoListResponse {
 
     private Boolean activo;
 
+    private Long usuarioId;
+
+    private String correoUsuario;
 }

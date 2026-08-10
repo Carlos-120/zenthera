@@ -20,12 +20,28 @@ public interface MedicoMapper {
 
     @Mapping(source = "clinica.id", target = "clinicaId")
     @Mapping(source = "clinica.nombre", target = "nombreClinica")
+    @Mapping(source = "usuario.id", target = "usuarioId")
+    @Mapping(source = "usuario.correo", target = "correoUsuario")
     MedicoResponse toResponse(Medico medico);
 
     @Mapping(source = "clinica.id", target = "clinicaId")
     @Mapping(source = "clinica.nombre", target = "nombreClinica")
+    @Mapping(source = "usuario.id", target = "usuarioId")
+    @Mapping(source = "usuario.correo", target = "correoUsuario")
     MedicoListResponse toListResponse(Medico medico);
 
     List<MedicoListResponse> toListResponse(List<Medico> medicos);
 
+    @org.mapstruct.AfterMapping
+    default void mapEstadoCuenta(Medico medico, @org.mapstruct.MappingTarget MedicoResponse response) {
+        if (medico.getUsuario() == null) {
+            response.setEstadoCuenta("SIN_CUENTA");
+        } else if (!Boolean.TRUE.equals(medico.getUsuario().getActivo())) {
+            response.setEstadoCuenta("INACTIVA");
+        } else if (Boolean.TRUE.equals(medico.getUsuario().getCambiarPassword())) {
+            response.setEstadoCuenta("CAMBIO_PASSWORD_REQUERIDO");
+        } else {
+            response.setEstadoCuenta("ACTIVA");
+        }
+    }
 }

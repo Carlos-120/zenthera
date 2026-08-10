@@ -13,6 +13,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.zenthera.dto.usuario.UsuarioDisponibleResponse;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/clinica/usuarios")
@@ -98,6 +100,19 @@ public class ClinicaUsuarioController {
                 ApiResponse.<UsuarioResponse>builder()
                         .success(true)
                         .message("Estado de usuario actualizado correctamente")
+                        .data(response)
+                        .build());
+    }
+
+    @GetMapping("/medicos-disponibles")
+    public ResponseEntity<ApiResponse<List<UsuarioDisponibleResponse>>> getUsuariosMedicosDisponibles() {
+        Long clinicaId = TenantContext.getCurrentTenant();
+        List<UsuarioDisponibleResponse> response = usuarioService.getUsuariosMedicosDisponibles(clinicaId);
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<UsuarioDisponibleResponse>>builder()
+                        .success(true)
+                        .message("Usuarios médicos elegibles listados correctamente")
                         .data(response)
                         .build());
     }

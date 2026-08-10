@@ -24,6 +24,7 @@ public class SecurityConfig {
         private final CustomAccessDeniedHandler accessDeniedHandler;
         private final CsrfAndOriginFilter csrfAndOriginFilter;
         private final com.zenthera.security.filter.ActivationRateLimitFilter activationRateLimitFilter;
+        private final com.zenthera.security.filter.ForcePasswordChangeFilter forcePasswordChangeFilter;
         private final TenantFilter tenantFilter;
         private final CorsConfigurationSource corsConfigurationSource;
         private final org.springframework.core.env.Environment env;
@@ -34,6 +35,7 @@ public class SecurityConfig {
                 CustomAccessDeniedHandler accessDeniedHandler,
                 CsrfAndOriginFilter csrfAndOriginFilter,
                 com.zenthera.security.filter.ActivationRateLimitFilter activationRateLimitFilter,
+                com.zenthera.security.filter.ForcePasswordChangeFilter forcePasswordChangeFilter,
                 TenantFilter tenantFilter,
                 CorsConfigurationSource corsConfigurationSource,
                 org.springframework.core.env.Environment env) {
@@ -42,6 +44,7 @@ public class SecurityConfig {
             this.accessDeniedHandler = accessDeniedHandler;
             this.csrfAndOriginFilter = csrfAndOriginFilter;
             this.activationRateLimitFilter = activationRateLimitFilter;
+            this.forcePasswordChangeFilter = forcePasswordChangeFilter;
             this.tenantFilter = tenantFilter;
             this.corsConfigurationSource = corsConfigurationSource;
             this.env = env;
@@ -66,7 +69,7 @@ public class SecurityConfig {
                                 }
                                 auth.requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout", "/api/v1/auth/activate").permitAll()
                                     .requestMatchers(HttpMethod.POST, "/api/v1/auth/register-clinic").permitAll()
-                                    .requestMatchers("/api/v1/auth/me").authenticated()
+                                    .requestMatchers("/api/v1/auth/me", "/api/v1/auth/cambiar-password").authenticated()
                                     .requestMatchers("/api/pacientes/**").hasAnyAuthority("ADMIN_CLINICA", "MEDICO", "RECEPCIONISTA")
                                     .requestMatchers("/api/v1/clinica/citas/**").hasAnyAuthority("ADMIN_CLINICA", "MEDICO", "RECEPCIONISTA")
                                     .requestMatchers("/api/v1/clinica/**").hasAuthority("ADMIN_CLINICA")
@@ -78,7 +81,8 @@ public class SecurityConfig {
                         .addFilterBefore(csrfAndOriginFilter, UsernamePasswordAuthenticationFilter.class)
                         .addFilterBefore(activationRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                        .addFilterAfter(tenantFilter, JwtAuthenticationFilter.class);
+                        .addFilterAfter(forcePasswordChangeFilter, JwtAuthenticationFilter.class)
+                        .addFilterAfter(tenantFilter, com.zenthera.security.filter.ForcePasswordChangeFilter.class);
 
                 return http.build();
         }

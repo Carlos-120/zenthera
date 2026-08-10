@@ -13,6 +13,8 @@ import com.zenthera.security.tenant.TenantContext;
 import com.zenthera.service.AuthService;
 import com.zenthera.exception.TokenReutilizadoException;
 import com.zenthera.util.HashUtil;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.zenthera.util.HashUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,17 +44,20 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordEncoder passwordEncoder;
     private final long refreshExpirationMs;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            JwtService jwtService,
                            UsuarioRepository usuarioRepository,
                            RefreshTokenRepository refreshTokenRepository,
+                           PasswordEncoder passwordEncoder,
                            @Value("${jwt.refresh-expiration-ms}") long refreshExpirationMs) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.usuarioRepository = usuarioRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.passwordEncoder = passwordEncoder;
         this.refreshExpirationMs = refreshExpirationMs;
     }
 
@@ -190,6 +195,25 @@ public class AuthServiceImpl implements AuthService {
                 .clinicaId(usuario.getClinica() != null ? usuario.getClinica().getId() : null)
                 .clinicaNombre(usuario.getClinica() != null ? usuario.getClinica().getNombre() : null)
                 .onboardingCompletado(usuario.getClinica() != null ? usuario.getClinica().getOnboardingCompletado() : null)
+                .cambiarPassword(usuario.getCambiarPassword())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void cambiarPassword(com.zenthera.dto.auth.CambiarPasswordRequest request) {
+        String correo = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Usuario usuario = usuarioRepository.findByCorreoAndActivoTrue(correo)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Las contraseñas no coinciden");
+        }
+
+        usuario.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        usuario.setCambiarPassword(false);
+
+        usuarioRepository.save(usuario);
     }
 }

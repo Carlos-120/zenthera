@@ -14,4 +14,5 @@ public interface AuthService {
 
     MeResponse getMe();
 
+    void cambiarPassword(com.zenthera.dto.auth.CambiarPasswordRequest request);
 }

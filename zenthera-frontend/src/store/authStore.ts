@@ -9,6 +9,7 @@ export interface UserProfile {
   clinicaId: number;
   clinicaNombre: string;
   onboardingCompletado: boolean | null;
+  cambiarPassword?: boolean;
   foto?: string | null;
 }
 
