@@ -1,10 +1,11 @@
-﻿import React from 'react';
-import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
+import React from 'react';
+import { render, screen, waitFor, act, fireEvent, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import '@testing-library/jest-dom';
 import DetallePacientePage from '../app/dashboard/pacientes/[id]/page';
 import * as pacienteApi from '../lib/api/pacientes';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useAuthStore } from '../store/authStore';
 
 const pushMock = vi.fn();
 const replaceMock = vi.fn();
@@ -44,6 +45,17 @@ describe('DetallePacientePage', () => {
   let queryClient: QueryClient;
   
   beforeEach(() => {
+    vi.clearAllMocks();
+    useAuthStore.getState().setAuth('token', {
+      id: 1,
+      nombres: 'Test',
+      apellidos: 'User',
+      correo: 'test@test.com',
+      rol: 'ADMIN_CLINICA',
+      clinicaId: 1,
+      clinicaNombre: 'Alpha',
+      onboardingCompletado: true
+    });
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -326,7 +338,7 @@ describe('DetallePacientePage', () => {
 
   it('16. Editar Información no navega a dashboard', async () => {
     vi.spyOn(pacienteApi, 'getPacienteById').mockResolvedValue({ success: true, message: 'OK', data: mockPaciente });
-    
+
     await act(async () => {
       await act(async () => { await renderComponent(); });
     });
@@ -344,6 +356,41 @@ describe('DetallePacientePage', () => {
     expect(roleGuardMock).toHaveBeenCalledWith(expect.objectContaining({ allowedRoles: ['ADMIN_CLINICA', 'MEDICO', 'RECEPCIONISTA'] }));
     expect(pushMock).not.toHaveBeenCalledWith('/dashboard');
     expect(replaceMock).not.toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('MEDICO ve pestaña Historia Clínica, otros roles no', async () => {
+    vi.spyOn(pacienteApi, 'getPacienteById').mockResolvedValue({ success: true, message: 'OK', data: mockPaciente });
+
+    // Primero como ADMIN_CLINICA (estado por defecto en beforeEach)
+    await act(async () => { await renderComponent(); });
+    await waitFor(() => {
+      expect(screen.getByText('Juan Perez')).toBeTruthy();
+    });
+    expect(screen.queryByText(/Historia Cl.nica/i)).toBeNull();
+
+    // Ahora como RECEPCIONISTA
+    cleanup();
+    useAuthStore.getState().setAuth('token', { id: 1, nombres: 'Test', apellidos: 'User', correo: 'test@test.com', rol: 'RECEPCIONISTA', clinicaId: 1, clinicaNombre: 'Alpha', onboardingCompletado: true });
+    await act(async () => { await renderComponent(); });
+    await waitFor(() => {
+      expect(screen.queryByText(/Historia Cl.nica/i)).toBeNull();
+    });
+
+    // SUPER_ADMIN tampoco puede ver contenido clínico desde esta vista.
+    cleanup();
+    useAuthStore.getState().setAuth('token', { id: 1, nombres: 'Test', apellidos: 'User', correo: 'test@test.com', rol: 'SUPER_ADMIN', clinicaId: 1, clinicaNombre: 'Alpha', onboardingCompletado: true });
+    await act(async () => { await renderComponent(); });
+    await waitFor(() => {
+      expect(screen.queryByText(/Historia Cl.nica/i)).toBeNull();
+    });
+
+    // Ahora como MEDICO
+    cleanup();
+    useAuthStore.getState().setAuth('token', { id: 1, nombres: 'Test', apellidos: 'User', correo: 'test@test.com', rol: 'MEDICO', clinicaId: 1, clinicaNombre: 'Alpha', onboardingCompletado: true });
+    await act(async () => { await renderComponent(); });
+    await waitFor(() => {
+      expect(screen.getByText(/Historia Cl.nica/i)).toBeTruthy();
+    });
   });
 });
 

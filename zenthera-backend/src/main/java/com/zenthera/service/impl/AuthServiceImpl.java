@@ -216,4 +216,22 @@ public class AuthServiceImpl implements AuthService {
 
         usuarioRepository.save(usuario);
     }
+    @Override
+    public com.zenthera.entity.Usuario getUsuarioAutenticado() {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            throw new com.zenthera.exception.ResourceNotFoundException("Usuario no autenticado");
+        }
+        com.zenthera.security.user.CustomUserDetails userDetails = (com.zenthera.security.user.CustomUserDetails) auth.getPrincipal();
+        return userDetails.getUsuario();
+    }
+
+    @Override
+    public Long getClinicaActualId() {
+        com.zenthera.entity.Usuario usuario = getUsuarioAutenticado();
+        if (usuario.getClinica() == null) {
+            throw new IllegalStateException("El usuario no pertenece a ninguna clínica");
+        }
+        return usuario.getClinica().getId();
+    }
 }

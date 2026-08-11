@@ -10,6 +10,8 @@ import { AlertCircle, ArrowLeft, Loader2, Save, UserSquare2, RefreshCcw, Edit, P
 import Link from 'next/link';
 import { RoleGuard } from '@/components/auth/RoleGuard';
 import { use } from 'react';
+import { HistoriaClinicaTab } from './HistoriaClinicaTab';
+import { useAuthStore } from '@/store/authStore';
 
 function calcularEdad(fechaNacimiento: string | undefined): number | string {
   if (!fechaNacimiento) return '-';
@@ -37,7 +39,12 @@ export default function DetallePacientePage({ params }: { params: Promise<{ id: 
   const pacienteId = Number(resolvedParams.id);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'ficha' | 'historia'>('ficha');
   const [serverError, setServerError] = useState<string | null>(null);
+
+  const { usuario } = useAuthStore();
+  const isMedico = usuario?.rol === 'MEDICO';
+  const effectiveTab = isMedico ? activeTab : 'ficha';
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['paciente', pacienteId],
@@ -191,9 +198,38 @@ export default function DetallePacientePage({ params }: { params: Promise<{ id: 
           )}
         </header>
 
+        {!isEditing && (
+          <div className="flex border-b border-border mb-6">
+            <button
+              onClick={() => setActiveTab('ficha')}
+              className={`px-4 py-2.5 font-medium text-sm transition-colors border-b-2 focus:outline-none focus:ring-2 focus:ring-primary ${
+                effectiveTab === 'ficha'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-foreground/60 hover:text-foreground'
+              }`}
+            >
+              Ficha del Paciente
+            </button>
+            {isMedico && (
+              <button
+                onClick={() => setActiveTab('historia')}
+                className={`px-4 py-2.5 font-medium text-sm transition-colors border-b-2 focus:outline-none focus:ring-2 focus:ring-primary flex items-center gap-2 ${
+                  effectiveTab === 'historia'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-foreground/60 hover:text-foreground'
+                }`}
+              >
+                <Activity className="w-4 h-4" />
+                Historia Clínica
+              </button>
+            )}
+          </div>
+        )}
+
         {!isEditing ? (
           <div className="space-y-6 animate-fade-in">
             {/* Ficha View */}
+            {effectiveTab === 'ficha' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
               <section className="glass rounded-2xl p-6 md:p-8 border border-border">
@@ -274,16 +310,11 @@ export default function DetallePacientePage({ params }: { params: Promise<{ id: 
                 </div>
               </section>
             </div>
+            )}
 
-            {/* Preparado estructuralmente para futuras pestañas o módulos (Historia clínica, citas) */}
-            <section className="mt-8 border border-border/50 rounded-2xl p-8 bg-surface/30 opacity-70 cursor-not-allowed">
-              <div className="text-center space-y-2">
-                <Activity className="w-8 h-8 text-foreground/40 mx-auto" />
-                <h3 className="text-lg font-medium text-foreground/60">Historia Clínica y Consultas</h3>
-                <p className="text-sm text-foreground/50">El módulo clínico completo estará disponible en futuras actualizaciones.</p>
-              </div>
-            </section>
-
+            {effectiveTab === 'historia' && isMedico && (
+              <HistoriaClinicaTab pacienteId={pacienteId} />
+            )}
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 animate-fade-in">

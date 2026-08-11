@@ -1,0 +1,24 @@
+ALTER TABLE historia_clinica
+    ALTER COLUMN created_at DROP DEFAULT,
+    ALTER COLUMN updated_at DROP DEFAULT;
+
+ALTER TABLE historia_clinica
+    ALTER COLUMN created_at TYPE TIMESTAMP WITHOUT TIME ZONE USING created_at AT TIME ZONE 'America/Guayaquil',
+    ALTER COLUMN updated_at TYPE TIMESTAMP WITHOUT TIME ZONE USING updated_at AT TIME ZONE 'America/Guayaquil';
+
+ALTER TABLE historia_clinica
+    ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP,
+    ALTER COLUMN updated_at SET DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE consulta_clinica
+    ALTER COLUMN created_at DROP DEFAULT,
+    ALTER COLUMN updated_at DROP DEFAULT;
+
+ALTER TABLE consulta_clinica
+    ALTER COLUMN finalizada_at TYPE TIMESTAMP WITHOUT TIME ZONE USING finalizada_at AT TIME ZONE 'America/Guayaquil',
+    ALTER COLUMN created_at TYPE TIMESTAMP WITHOUT TIME ZONE USING created_at AT TIME ZONE 'America/Guayaquil',
+    ALTER COLUMN updated_at TYPE TIMESTAMP WITHOUT TIME ZONE USING updated_at AT TIME ZONE 'America/Guayaquil';
+
+ALTER TABLE consulta_clinica
+    ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP,
+    ALTER COLUMN updated_at SET DEFAULT CURRENT_TIMESTAMP;

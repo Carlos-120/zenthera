@@ -57,9 +57,45 @@ describe('ForcePasswordChangeFlow', () => {
     const confirmInput = screen.getByLabelText('Confirmar Contraseña');
     const submitBtn = screen.getByRole('button', { name: /Guardar y Continuar/i });
 
+    // Test 1: password demasiado corta
+    fireEvent.change(passwordInput, { target: { value: 'short' } });
+    fireEvent.change(confirmInput, { target: { value: 'short' } });
+    fireEvent.click(submitBtn);
+    await waitFor(() => {
+        expect(screen.getByText('La contraseña debe tener entre 12 y 72 caracteres')).toBeInTheDocument();
+    });
+
+    // Test 3: confirmación diferente
+    fireEvent.change(passwordInput, { target: { value: 'password123456' } });
+    fireEvent.change(confirmInput, { target: { value: 'password1234567' } });
+    fireEvent.click(submitBtn);
+    await waitFor(() => {
+        expect(screen.getByText('Las contraseñas no coinciden')).toBeInTheDocument();
+    });
+    expect(mockedApi.post).not.toHaveBeenCalled();
+
+    // Test 5: backend validation error -> input correspondiente
     fireEvent.change(passwordInput, { target: { value: 'password123456' } });
     fireEvent.change(confirmInput, { target: { value: 'password123456' } });
+    mockedApi.post.mockRejectedValueOnce({
+      response: { data: { message: 'Error de validación', errors: ['newPassword: La contraseña es demasiado débil'] } }
+    });
+    fireEvent.click(submitBtn);
+    await waitFor(() => {
+        expect(screen.getByText('Revisa los campos marcados.')).toBeInTheDocument();
+        expect(screen.getByText('La contraseña es demasiado débil')).toBeInTheDocument();
+    });
 
+    // Test 6: backend generic error -> banner
+    mockedApi.post.mockRejectedValueOnce({
+      response: { data: { message: 'El usuario está bloqueado' } }
+    });
+    fireEvent.click(submitBtn);
+    await waitFor(() => {
+        expect(screen.getByText('El usuario está bloqueado')).toBeInTheDocument();
+    });
+
+    // Test 4, 7, 8, 9: Cambio exitoso
     mockedApi.post.mockResolvedValueOnce({ data: { success: true } });
 
     // 7. endpoint exacto
@@ -67,7 +103,8 @@ describe('ForcePasswordChangeFlow', () => {
 
     await waitFor(() => {
       expect(mockedApi.post).toHaveBeenCalledWith('/api/v1/auth/cambiar-password', {
-        password: 'password123456'
+        newPassword: 'password123456',
+        confirmPassword: 'password123456'
       });
     });
 
