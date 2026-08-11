@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState } from 'react';
@@ -10,9 +11,9 @@ import api from '@/lib/axios';
 import { useAuthStore } from '@/store/authStore';
 
 const CambiarPasswordSchema = z.object({
-  password: z.string().min(12, 'La contraseña debe tener entre 12 y 72 caracteres').max(72, 'La contraseña debe tener entre 12 y 72 caracteres'),
+  newPassword: z.string().min(12, 'La contraseña debe tener entre 12 y 72 caracteres').max(72, 'La contraseña debe tener entre 12 y 72 caracteres'),
   confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
+}).refine((data) => data.newPassword === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',
   path: ['confirmPassword']
 });
@@ -25,7 +26,7 @@ export default function CambiarPasswordPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<CambiarPasswordValues>({
+  const { register, handleSubmit, setError, formState: { errors } } = useForm<CambiarPasswordValues>({
     resolver: zodResolver(CambiarPasswordSchema)
   });
 
@@ -35,7 +36,8 @@ export default function CambiarPasswordPage() {
 
     try {
       await api.post('/api/v1/auth/cambiar-password', {
-        password: data.password
+        newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword
       });
 
       // Update auth store user state so changing password is no longer true
@@ -45,14 +47,18 @@ export default function CambiarPasswordPage() {
 
       // Redirect to dashboard (if user has right permissions, dashboard guards will handle it)
       router.push('/dashboard');
-    } catch (error) {
-      if (
-        error &&
-        typeof error === 'object' &&
-        'response' in error &&
-        (error as { response?: { data?: { message?: string } } }).response?.data?.message
-      ) {
-        setServerError((error as { response?: { data?: { message?: string } } }).response!.data!.message!);
+    } catch (error: any) {
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        error.response.data.errors.forEach((err: string) => {
+          const [field, ...messageParts] = err.split(': ');
+          const message = messageParts.join(': ');
+          if (field && message) {
+            setError(field as keyof CambiarPasswordValues, { type: 'server', message });
+          }
+        });
+        setServerError('Revisa los campos marcados.');
+      } else if (error.response?.data?.message) {
+        setServerError(error.response.data.message);
       } else {
         setServerError('Ocurrió un error inesperado. Por favor, intente de nuevo.');
       }
@@ -85,17 +91,17 @@ export default function CambiarPasswordPage() {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Nueva Contraseña
               </label>
               <input
-                id="password"
+                id="newPassword"
                 type="password"
-                {...register('password')}
+                {...register('newPassword')}
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                 placeholder="Mínimo 12 caracteres"
               />
-              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
+              {errors.newPassword && <p className="mt-1 text-sm text-red-600">{errors.newPassword.message}</p>}
             </div>
 
             <div>
